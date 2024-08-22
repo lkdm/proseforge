@@ -5,4 +5,4 @@ run:
 	pnpm run dev:desktop
 
 css:
-	pnpm --filter @pc/ui css-watch
+	pnpm --filter @md/interface css-watch

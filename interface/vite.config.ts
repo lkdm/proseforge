@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@md/interface': '/interface/src', // Points to the source directory
+      '@md/interface': '/interface', // Points to the source directory
     },
   },
 });

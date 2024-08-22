@@ -4,6 +4,11 @@
   "private": true,
   "description": "",
   "packageManager": "pnpm@9.7.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "interface"
+  ],
   "scripts": {
     "desktop": "pnpm --filter @md/tauri --",
     "dev:desktop": "pnpm run --filter @md/tauri tauri dev"

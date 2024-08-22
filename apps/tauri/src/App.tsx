@@ -1,6 +1,7 @@
 import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/core";
+import {Layout} from "@md/interface/app/Layout"
 import "./App.css";
 
 function App() {
@@ -15,6 +16,8 @@ function App() {
   return (
     <div className="container">
       <h1>Welcome to Tauri!</h1>
+
+    <Layout />
 
       <div className="row">
         <a href="https://vitejs.dev" target="_blank">

@@ -6,9 +6,9 @@ import Editor from "@md/interface/components/Editor"
 import "./App.css";
 
 function App() {
-  const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [chunks, setChunks] = useState<string[]>([]);
 
   // async function greet() {
   //   // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
@@ -23,7 +23,7 @@ function App() {
     setIsLoading(true)
       try {
         const result = await invoke("load");
-        setContent(result as string);
+        setChunks(result.split("\n"));
         console.log("Content loaded:", result)
       } catch (error) {
         setError(JSON.stringify(error));
@@ -49,10 +49,16 @@ function App() {
   const handleSave = async () => {
     try {
       await invoke("save", { content });
-      console.log("Content saved:", content)
+      console.log("Content saved:", chunks.join("\n"))
     } catch (error) {
       console.error("Error saving content:", error);
     }
+  }
+
+  const handleSetChunk = (index: number, value: string) => {
+    const newChunks = [...chunks];
+    newChunks[index] = value;
+    setChunks(newChunks);
   }
 
   return (
@@ -60,7 +66,7 @@ function App() {
       <Content>
         <button onClick={handleOpenDialogue}>Load</button>
         <button onClick={handleSave}>Save</button>
-        {!isLoading && <Editor defaultContent={content} setContent={setContent} />}
+        {!isLoading && <Editor chunks={chunks} handleSetChunk={handleSetChunk} />}
       </Content>
     </Layout>
   );

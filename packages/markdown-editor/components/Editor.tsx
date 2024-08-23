@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { Paragraph } from "@tiptap/extension-paragraph";
 import { Blockquote } from "@tiptap/extension-blockquote";
 import { BulletList } from "@tiptap/extension-bullet-list";
@@ -19,8 +19,16 @@ import { HardBreak } from "@tiptap/extension-hard-break";
 import Link from "@tiptap/extension-link";
 
 import {
+  MarkdownSerializer as ProseMirrorMarkdownSerializer,
+  defaultMarkdownSerializer,
+} from "prosemirror-markdown";
+import { DOMParser as ProseMirrorDOMParser } from "prosemirror-model";
+import {marked} from "marked";
+
+import {
   useEditor,
   EditorContent,
+  JSONContent,
   // FloatingMenu,
   // BubbleMenu,
 } from "@tiptap/react";
@@ -51,19 +59,74 @@ const extensions = [
 
 ];
 
-interface Props {
-  content: string;
+const serializerMarks = {
+  ...defaultMarkdownSerializer.marks,
+  [Bold.name]: defaultMarkdownSerializer.marks.strong,
+  [Strike.name]: {
+    open: "~~",
+    close: "~~",
+    mixable: true,
+    expelEnclosingWhitespace: true,
+  },
+  [Italic.name]: {
+    open: "_",
+    close: "_",
+    mixable: true,
+    expelEnclosingWhitespace: true,
+  },
+};
+
+const serializerNodes = {
+  ...defaultMarkdownSerializer.nodes,
+  [Paragraph.name]: defaultMarkdownSerializer.nodes.paragraph,
+  [BulletList.name]: defaultMarkdownSerializer.nodes.bullet_list,
+  [ListItem.name]: defaultMarkdownSerializer.nodes.list_item,
+  [HorizontalRule.name]: defaultMarkdownSerializer.nodes.horizontal_rule
+};
+
+function serialise(schema: any, content: JSONContent) {
+  const proseMirrorDocument = schema.nodeFromJSON(content);
+  const serializer = new ProseMirrorMarkdownSerializer(
+    serializerNodes,
+    serializerMarks
+  );
+
+  return serializer.serialize(proseMirrorDocument, {
+    tightLists: true,
+  });
 }
 
-const Tiptap = ({ content }: Props) => {
+function deserialise(schema: any, content: string) {
+  const html = marked.parse(content);
+
+  if (!html) return null;
+
+  const parser = new DOMParser();
+  const { body } = parser.parseFromString(html, "text/html");
+
+  // append original source as a comment that nodes can access
+  body.append(document.createComment(content));
+
+  const state = ProseMirrorDOMParser.fromSchema(schema).parse(body);
+
+  return state.toJSON();
+}
+
+interface Props {
+  defaultContent: string;
+  handleContentChange: (content: string) => void;
+}
+
+const Tiptap = ({ defaultContent, handleContentChange }: Props) => {
+
   const editor = useEditor({
     extensions,
-    content,
-    onCreate: ({ editor }) => {
-      console.log("Editor created:", editor.getHTML());
+    content: loadMarkdownInput(defaultContent),
+    onCreate({ editor }) {
+      handleContentChange(serialise(editor.schema, editor.getJSON()));
     },
     onUpdate: ({ editor }) => {
-      console.log("Editor content:", editor.getHTML());
+      handleContentChange(serialise(editor.schema, editor.getJSON()));
     },
     editorProps: {
       attributes: {
@@ -72,6 +135,13 @@ const Tiptap = ({ content }: Props) => {
       },
     },
   });
+
+  function loadMarkdownInput(content: string) {
+     const deserialized = deserialise(editor?.schema, content);
+     editor?.commands.setContent(deserialized);
+     return deserialized;
+   }
+
 
   return <EditorContent editor={editor} />
 };

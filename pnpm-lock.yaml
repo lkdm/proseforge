@@ -82,15 +82,9 @@ importers:
       lucide-react:
         specifier: ^0.426.0
         version: 0.426.0(react@18.3.1)
-      marked:
-        specifier: ^14.0.0
-        version: 14.0.0
       postcss:
         specifier: ^8.4.41
         version: 8.4.41
-      prosemirror-markdown:
-        specifier: ^1.13.0
-        version: 1.13.0
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -218,9 +212,18 @@ importers:
       '@tiptap/react':
         specifier: ^2.5.9
         version: 2.6.5(@tiptap/core@2.6.5(@tiptap/pm@2.6.5))(@tiptap/pm@2.6.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/marked':
+        specifier: ^6.0.0
+        version: 6.0.0
+      marked:
+        specifier: ^4.3.0
+        version: 4.3.0
       prosemirror-markdown:
         specifier: ^1.13.0
         version: 1.13.0
+      prosemirror-model:
+        specifier: ^1.22.3
+        version: 1.22.3
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -1167,6 +1170,10 @@ packages:
 
   '@types/markdown-it@13.0.9':
     resolution: {integrity: sha512-1XPwR0+MgXLWfTn9gCsZ55AHOKW1WN+P9vr0PaQh5aerR9LLQXUbjfEAFhjmEmyoYFWAyuN2Mqkn40MZ4ukjBw==}
+
+  '@types/marked@6.0.0':
+    resolution: {integrity: sha512-jmjpa4BwUsmhxcfsgUit/7A9KbrC48Q0q8KvnY107ogcjGgTFDlIL3RpihNpx2Mu1hM4mdFQjoVc4O6JoGKHsA==}
+    deprecated: This is a stub types definition. marked provides its own type definitions, so you do not need this installed.
 
   '@types/mdurl@1.0.5':
     resolution: {integrity: sha512-6L6VymKTzYSrEf4Nev4Xa1LCHKrlTlYCBMTlQKFuddo1CvQcE52I0mwfOJayueUC7MJuXOeHTcIU683lzd0cUA==}
@@ -2179,9 +2186,9 @@ packages:
     resolution: {integrity: sha512-a54IwgWPaeBCAAsv13YgmALOF1elABB08FxO9i+r4VFk5Vl4pKokRPeX8u5TCgSsPi6ec1otfLjdOpVcgbpshg==}
     hasBin: true
 
-  marked@14.0.0:
-    resolution: {integrity: sha512-uIj4+faQ+MgHgwUW1l2PsPglZLOLOT1uErt06dAPtx2kjteLAkbsd/0FiYg/MGS+i7ZKLb7w2WClxHkzOOuryQ==}
-    engines: {node: '>= 18'}
+  marked@4.3.0:
+    resolution: {integrity: sha512-PRsaiG84bK+AMvxziE/lCFss8juXjNaWzVbN5tXAm4XjeaS9NAHhop+PjQxz2A9h8Q4M/xGmzP8vqNwy6JeK0A==}
+    engines: {node: '>= 12'}
     hasBin: true
 
   mdurl@2.0.0:
@@ -3900,6 +3907,10 @@ snapshots:
       '@types/linkify-it': 3.0.5
       '@types/mdurl': 1.0.5
 
+  '@types/marked@6.0.0':
+    dependencies:
+      marked: 4.3.0
+
   '@types/mdurl@1.0.5': {}
 
   '@types/node@22.5.0':
@@ -5067,7 +5078,7 @@ snapshots:
       punycode.js: 2.3.1
       uc.micro: 2.1.0
 
-  marked@14.0.0: {}
+  marked@4.3.0: {}
 
   mdurl@2.0.0: {}
 

@@ -37,9 +37,19 @@ function App() {
     load()
   }, [])
 
+  const handleOpenDialogue = async () => {
+    try {
+      await invoke("open_file_dialogue");
+      await load();
+    } catch (error) {
+      console.error("Error opening dialogue:", error);
+    }
+  }
+
   return (
     <Layout>
       <Content>
+        <button onClick={handleOpenDialogue}>Load</button>
         {!isLoading && <Editor defaultContent={content} setContent={setContent} />}
       </Content>
     </Layout>

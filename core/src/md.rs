@@ -1,3 +1,4 @@
+use rfd::FileDialog;
 use std::{
     fs::{self, File},
     io::{self, BufReader, BufWriter, Read, Write},
@@ -26,7 +27,7 @@ pub trait DataStorage {
     // Writes the content to the file
     fn write(&self) -> Result<(), CoreError>;
     // Reads the content from the file
-    fn read(&self) -> Result<String, CoreError>;
+    fn read(&mut self) -> Result<(), CoreError>;
 
     fn content(&self) -> String;
 }
@@ -42,12 +43,13 @@ impl DataStorage for MarkdownFile {
         buf_writer.flush()?;
         Ok(())
     }
-    fn read(&self) -> Result<String, CoreError> {
+    fn read(&mut self) -> Result<(), CoreError> {
         let file = File::open(self.path.as_ref().unwrap())?;
         let mut buf_reader = BufReader::new(file);
         let mut content = String::new();
         buf_reader.read_to_string(&mut content)?;
-        Ok(content)
+        self.content = content;
+        Ok(())
     }
     fn content(&self) -> String {
         self.content.clone()
@@ -63,6 +65,25 @@ impl MarkdownFile {
                 path,
             },
         }
+    }
+}
+
+impl From<PathBuf> for MarkdownFile {
+    fn from(path: PathBuf) -> Self {
+        MarkdownFile {
+            content: String::new(),
+            path: Some(path),
+        }
+    }
+}
+
+pub fn open_file_dialog() -> Result<PathBuf, CoreError> {
+    let dir = PathBuf::from("/");
+    let file_dialog_res = FileDialog::new().set_directory(dir).pick_file();
+    if let Some(file_handle) = file_dialog_res {
+        Ok(file_handle.to_path_buf())
+    } else {
+        Err(CoreError::no_open_path())
     }
 }
 

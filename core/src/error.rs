@@ -79,4 +79,14 @@ impl CoreError {
             detail,
         }
     }
+    pub fn no_open_path() -> Self {
+        let title = String::from("Open Error");
+        let message = String::from("The file path is missing.");
+        let detail = Some(String::from("Please provide a file path."));
+        Self {
+            title,
+            message,
+            detail,
+        }
+    }
 }

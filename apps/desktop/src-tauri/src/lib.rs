@@ -1,5 +1,7 @@
 use md_core::error::CoreError;
 use md_core::md::DataStorage;
+use md_core::md::MarkdownFile;
+use md_core::md::*;
 use md_core::Node;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -17,6 +19,16 @@ async fn load(state: tauri::State<'_, Mutex<Node>>) -> Result<String, CoreError>
     let state = state.lock().unwrap();
     let editor = state.editor.clone();
     Ok(editor.content())
+}
+
+#[tauri::command]
+async fn open_file_dialogue(state: tauri::State<'_, Mutex<Node>>) -> Result<(), CoreError> {
+    let path = open_file_dialog()?;
+    let mut md: MarkdownFile = path.into();
+    let mut state = state.lock().unwrap();
+    md.read()?;
+    state.editor = Arc::new(md);
+    Ok(())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -66,7 +78,7 @@ pub fn run() {
             Ok(())
         })
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![greet, load])
+        .invoke_handler(tauri::generate_handler![greet, load, open_file_dialogue])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

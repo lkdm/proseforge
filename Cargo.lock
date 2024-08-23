@@ -632,6 +632,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "desktop"
+version = "0.0.0"
+dependencies = [
+ "cocoa 0.25.0",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-shell",
+]
+
+[[package]]
 name = "digest"
 version = "0.10.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3140,18 +3152,6 @@ checksum = "61c41af27dd6d1e27b1b16b489db798443478cef1f06a660c96db617ba5de3b1"
 
 [[package]]
 name = "tauri"
-version = "0.0.0"
-dependencies = [
- "cocoa 0.25.0",
- "serde",
- "serde_json",
- "tauri 2.0.0-rc.5",
- "tauri-build",
- "tauri-plugin-shell",
-]
-
-[[package]]
-name = "tauri"
 version = "2.0.0-rc.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d386b956b09cf88301912453829269f3914b3c813020d429ed8110c75e9dded"
@@ -3294,7 +3294,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shared_child",
- "tauri 2.0.0-rc.5",
+ "tauri",
  "tauri-plugin",
  "thiserror",
  "tokio",

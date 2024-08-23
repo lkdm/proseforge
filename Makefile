@@ -1,5 +1,6 @@
 install:
 	pnpm recursive install
+	cargo install --path ./apps/desktop/src-tauri
 
 run:
 	pnpm run dev:desktop

@@ -1,4 +1,3 @@
-import React from "react";
 import { Paragraph } from "@tiptap/extension-paragraph";
 import { Blockquote } from "@tiptap/extension-blockquote";
 import { BulletList } from "@tiptap/extension-bullet-list";
@@ -20,8 +19,8 @@ import Link from "@tiptap/extension-link";
 import {
   useEditor,
   EditorContent,
-  FloatingMenu,
-  BubbleMenu,
+  // FloatingMenu,
+  // BubbleMenu,
 } from "@tiptap/react";
 
 // define your extension array

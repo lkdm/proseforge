@@ -10,8 +10,10 @@
     "interface"
   ],
   "scripts": {
-    "desktop": "pnpm --filter @md/tauri --",
-    "dev:desktop": "pnpm run --filter @md/tauri tauri dev"
+    "tauri": "pnpm --filter @md/tauri --",
+    "interface": "pnpm --filter @md/interface --",
+    "dev:desktop": "pnpm run --filter @md/tauri tauri dev",
+    "dev:ios": "pnpm run --filter @md/tauri tauri ios dev"
   },
   "keywords": [],
   "author": "",

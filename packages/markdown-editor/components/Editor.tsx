@@ -1,149 +1,49 @@
-import React, { useEffect, useState } from "react"
-import { Paragraph } from "@tiptap/extension-paragraph";
-import { Blockquote } from "@tiptap/extension-blockquote";
-import { BulletList } from "@tiptap/extension-bullet-list";
-import { OrderedList } from "@tiptap/extension-ordered-list";
-import { ListItem } from "@tiptap/extension-list-item";
-import { ListKeymap } from "@tiptap/extension-list-keymap";
-import { Heading } from "@tiptap/extension-heading";
-import { HorizontalRule } from "@tiptap/extension-horizontal-rule";
-import { Bold } from "@tiptap/extension-bold";
-import { Italic } from "@tiptap/extension-italic";
-import { Strike } from "@tiptap/extension-strike";
-import { Underline } from "@tiptap/extension-underline";
-import { Typography } from "@tiptap/extension-typography";
-import { History } from "@tiptap/extension-history";
-import { Document } from "@tiptap/extension-document";
-import { Text } from "@tiptap/extension-text";
-import { HardBreak } from "@tiptap/extension-hard-break";
-import Link from "@tiptap/extension-link";
+import React, { useState } from 'react';
+import { defaultValueCtx, Editor, rootCtx } from '@milkdown/kit/core';
+import { nord } from '@milkdown/theme-nord';
+import { Milkdown, MilkdownProvider, useEditor } from '@milkdown/react';
+import { listener, listenerCtx } from "@milkdown/plugin-listener";
+import { commonmark } from '@milkdown/kit/preset/commonmark';
 
-import {
-  MarkdownSerializer as ProseMirrorMarkdownSerializer,
-  defaultMarkdownSerializer,
-} from "prosemirror-markdown";
-import { DOMParser as ProseMirrorDOMParser } from "prosemirror-model";
-import {marked} from "marked";
+// TOOD: https://codesandbox.io/p/sandbox/react-grdxqn?file=%2Fsrc%2FApp.js%3A98%2C9-98%2C23
 
-import {
-  useEditor,
-  EditorContent,
-  JSONContent,
-  // FloatingMenu,
-  // BubbleMenu,
-} from "@tiptap/react";
+const MilkdownEditor: React.FC = () => {
+  const [content, setContent] = useState("# hello \nSelect me to annotate me!");
 
-// define your extension array
-const extensions = [
-  Document,
-  Paragraph,
-  Text,
-  HardBreak,
-  BulletList,
-  OrderedList,
-  ListItem,
-  ListKeymap,
-  Blockquote,
-  Heading,
-  HorizontalRule,
-  Bold,
-  Italic,
-  Strike,
-  Underline,
-  Typography,
-  History,
-  Link.configure({
-    openOnClick: false,
-    autolink: true,
-  }),
-
-];
-
-const serializerMarks = {
-  ...defaultMarkdownSerializer.marks,
-  [Bold.name]: defaultMarkdownSerializer.marks.strong,
-  [Strike.name]: {
-    open: "~~",
-    close: "~~",
-    mixable: true,
-    expelEnclosingWhitespace: true,
-  },
-  [Italic.name]: {
-    open: "_",
-    close: "_",
-    mixable: true,
-    expelEnclosingWhitespace: true,
-  },
-};
-
-const serializerNodes = {
-  ...defaultMarkdownSerializer.nodes,
-  [Paragraph.name]: defaultMarkdownSerializer.nodes.paragraph,
-  [BulletList.name]: defaultMarkdownSerializer.nodes.bullet_list,
-  [ListItem.name]: defaultMarkdownSerializer.nodes.list_item,
-  [HorizontalRule.name]: defaultMarkdownSerializer.nodes.horizontal_rule
-};
-
-function serialise(schema: any, content: JSONContent) {
-  const proseMirrorDocument = schema.nodeFromJSON(content);
-  const serializer = new ProseMirrorMarkdownSerializer(
-    serializerNodes,
-    serializerMarks
+    const { get } = useEditor((root) =>
+      Editor.make()
+        .config(nord)
+        .config((ctx) => {
+          ctx.set(rootCtx, root)
+          ctx.set(defaultValueCtx, content)
+          ctx
+            .get(listenerCtx)
+            .updated((ctx, doc, prevDoc) => {
+              console.log("updated", doc, prevDoc);
+            })
+            .markdownUpdated((ctx, markdown, prevMarkdown) => {
+                console.log(
+                  "markdownUpdated to=",
+                  markdown,
+                  "\nprev=",
+                  prevMarkdown
+                );
+                setContent(markdown);
+              })
+        })
+        .use(commonmark)
+        .use(listener)
   );
 
-  return serializer.serialize(proseMirrorDocument, {
-    tightLists: true,
-  });
-}
-
-function deserialise(schema: any, content: string) {
-  const html = marked.parse(content);
-
-  if (!html) return null;
-
-  const parser = new DOMParser();
-  const { body } = parser.parseFromString(html, "text/html");
-
-  // append original source as a comment that nodes can access
-  body.append(document.createComment(content));
-
-  const state = ProseMirrorDOMParser.fromSchema(schema).parse(body);
-
-  return state.toJSON();
-}
-
-interface Props {
-  defaultContent: string;
-  handleContentChange: (content: string) => void;
-}
-
-const Tiptap = ({ defaultContent, handleContentChange }: Props) => {
-
-  const editor = useEditor({
-    extensions,
-    content: loadMarkdownInput(defaultContent),
-    onCreate({ editor }) {
-      handleContentChange(serialise(editor.schema, editor.getJSON()));
-    },
-    onUpdate: ({ editor }) => {
-      handleContentChange(serialise(editor.schema, editor.getJSON()));
-    },
-    editorProps: {
-      attributes: {
-        class:
-          "prose dark:prose-invert prose-lg prose-serif focus:outline-none",
-      },
-    },
-  });
-
-  function loadMarkdownInput(content: string) {
-     const deserialized = deserialise(editor?.schema, content);
-     editor?.commands.setContent(deserialized);
-     return deserialized;
-   }
-
-
-  return <EditorContent editor={editor} />
+  return <Milkdown />;
 };
 
-export default Tiptap;
+const MilkdownEditorWrapper: React.FC = () => {
+  return (
+    <MilkdownProvider>
+      <MilkdownEditor />
+    </MilkdownProvider>
+  );
+};
+
+export default MilkdownEditorWrapper

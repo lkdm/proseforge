@@ -40,7 +40,7 @@ function App() {
   return (
     <Layout>
       <Content>
-    nuts
+    {/* nuts   */}
         {!isLoading && <Editor defaultContent={content} handleContentChange={console.log} />}
       </Content>
     </Layout>

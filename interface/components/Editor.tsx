@@ -7,7 +7,7 @@ interface EditorProps {
 }
 
 const Editor = (props: EditorProps) => {
-  return <InnerEditor {...props} />
+  return <InnerEditor />
 }
 
 export default Editor

@@ -155,6 +155,9 @@ importers:
       '@milkdown/kit':
         specifier: ^7.5.3
         version: 7.5.3(@codemirror/language@6.10.2)(@codemirror/state@6.4.1)(@codemirror/view@6.32.0)(element-internals-polyfill@0.1.55)
+      '@milkdown/plugin-history':
+        specifier: ^7.5.0
+        version: 7.5.0(@milkdown/core@7.5.0(@milkdown/ctx@7.5.0)(@milkdown/prose@7.5.0)(@milkdown/transformer@7.5.0(@milkdown/prose@7.5.0)))(@milkdown/ctx@7.5.0)(@milkdown/prose@7.5.0)(@milkdown/transformer@7.5.0(@milkdown/prose@7.5.0))
       '@milkdown/plugin-listener':
         specifier: ^7.5.0
         version: 7.5.0(@milkdown/core@7.5.0(@milkdown/ctx@7.5.0)(@milkdown/prose@7.5.0)(@milkdown/transformer@7.5.0(@milkdown/prose@7.5.0)))(@milkdown/ctx@7.5.0)(@milkdown/prose@7.5.0)(@milkdown/transformer@7.5.0(@milkdown/prose@7.5.0))
@@ -164,6 +167,12 @@ importers:
       '@milkdown/theme-nord':
         specifier: ^7.5.0
         version: 7.5.0(@milkdown/core@7.5.0(@milkdown/ctx@7.5.0)(@milkdown/prose@7.5.0)(@milkdown/transformer@7.5.0(@milkdown/prose@7.5.0)))(@milkdown/ctx@7.5.0)(@milkdown/prose@7.5.0)
+      clipboard:
+        specifier: link:@milkdown/kit/plugin/clipboard
+        version: link:@milkdown/kit/plugin/clipboard
+      indent:
+        specifier: link:@milkdown/kit/plugin/indent
+        version: link:@milkdown/kit/plugin/indent
       react:
         specifier: ^18.3.1
         version: 18.3.1

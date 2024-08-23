@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { defaultValueCtx, Editor, rootCtx } from '@milkdown/kit/core';
+import { defaultValueCtx, Editor, rootCtx, editorViewCtx } from '@milkdown/kit/core';
 import { nord } from '@milkdown/theme-nord';
 import { Milkdown, MilkdownProvider, useEditor } from '@milkdown/react';
 import { listener, listenerCtx } from "@milkdown/plugin-listener";
@@ -25,6 +25,11 @@ const MilkdownEditor = ({defaultContent, setContent}: EditorProps) => {
           ctx.set(defaultValueCtx, defaultContent)
           ctx
             .get(listenerCtx)
+            .mounted((ctx) => {
+              // Focus the editor
+              const view = ctx.get(editorViewCtx);
+              view.focus();
+            })
             .updated((ctx, doc, prevDoc) => {
               console.log("updated", doc, prevDoc);
             })

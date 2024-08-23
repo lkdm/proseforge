@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { defaultValueCtx, Editor, rootCtx } from '@milkdown/kit/core';
 import { nord } from '@milkdown/theme-nord';
 import { Milkdown, MilkdownProvider, useEditor } from '@milkdown/react';
@@ -7,15 +7,19 @@ import { commonmark } from '@milkdown/kit/preset/commonmark';
 
 // TOOD: https://codesandbox.io/p/sandbox/react-grdxqn?file=%2Fsrc%2FApp.js%3A98%2C9-98%2C23
 
-const MilkdownEditor: React.FC = () => {
-  const [content, setContent] = useState("# hello \nSelect me to annotate me!");
+interface EditorProps {
+  defaultContent: string;
+  setContent: (content: string) => void;
+}
+
+const MilkdownEditor = ({defaultContent, setContent}: EditorProps) => {
 
     const { get } = useEditor((root) =>
       Editor.make()
         .config(nord)
         .config((ctx) => {
           ctx.set(rootCtx, root)
-          ctx.set(defaultValueCtx, content)
+          ctx.set(defaultValueCtx, defaultContent)
           ctx
             .get(listenerCtx)
             .updated((ctx, doc, prevDoc) => {
@@ -38,10 +42,10 @@ const MilkdownEditor: React.FC = () => {
   return <Milkdown />;
 };
 
-const MilkdownEditorWrapper: React.FC = () => {
+const MilkdownEditorWrapper = (props: EditorProps) => {
   return (
     <MilkdownProvider>
-      <MilkdownEditor />
+      <MilkdownEditor { ...props } />
     </MilkdownProvider>
   );
 };

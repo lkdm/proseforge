@@ -8,7 +8,7 @@ import "./App.css";
 function App() {
   const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // async function greet() {
   //   // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
@@ -20,6 +20,7 @@ function App() {
   // }
 
   async function load() {
+    setIsLoading(true)
       try {
         const result = await invoke("load");
         setContent(result as string);
@@ -33,15 +34,13 @@ function App() {
 
   useEffect(() => {
     console.log("Mounting app.")
-    setIsLoading(true)
     load()
   }, [])
 
   return (
     <Layout>
       <Content>
-    {/* nuts   */}
-        {!isLoading && <Editor defaultContent={content} handleContentChange={console.log} />}
+        {!isLoading && <Editor defaultContent={content} setContent={setContent} />}
       </Content>
     </Layout>
   );

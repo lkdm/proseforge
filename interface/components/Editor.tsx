@@ -3,11 +3,11 @@ import InnerEditor from '@md/markdown-editor/components/Editor'
 
 interface EditorProps {
   defaultContent: string,
-  handleContentChange: (content: string) => void,
+  setContent: (content: string) => void,
 }
 
 const Editor = (props: EditorProps) => {
-  return <InnerEditor />
+  return <InnerEditor {...props} />
 }
 
 export default Editor

@@ -66,6 +66,10 @@ impl MarkdownFile {
             },
         }
     }
+
+    pub fn set_content(&mut self, content: &str) {
+        self.content = content.into();
+    }
 }
 
 impl From<PathBuf> for MarkdownFile {

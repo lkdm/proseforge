@@ -89,4 +89,14 @@ impl CoreError {
             detail,
         }
     }
+    pub fn multiple_arc_references() -> Self {
+        let title = String::from("Arc Error");
+        let message = String::from("Multiple references to the same Arc.");
+        let detail = Some(String::from("Please clone the Arc before using it."));
+        Self {
+            title,
+            message,
+            detail,
+        }
+    }
 }

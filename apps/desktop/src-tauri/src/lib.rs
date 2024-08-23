@@ -22,6 +22,20 @@ async fn load(state: tauri::State<'_, Mutex<Node>>) -> Result<String, CoreError>
 }
 
 #[tauri::command]
+async fn save(content: &str, state: tauri::State<'_, Mutex<Node>>) -> Result<(), CoreError> {
+    let mut state = state.lock().unwrap();
+    // Use Arc::get_mut to get a mutable reference to MarkdownFile
+    // Note: This only works if there's exactly one Arc pointer to the data
+    let editor = match Arc::get_mut(&mut state.editor) {
+        Some(editor) => editor,
+        None => return Err(CoreError::multiple_arc_references()),
+    };
+    editor.set_content(content);
+    editor.write()?;
+    Ok(())
+}
+
+#[tauri::command]
 async fn open_file_dialogue(state: tauri::State<'_, Mutex<Node>>) -> Result<(), CoreError> {
     let path = open_file_dialog()?;
     let mut md: MarkdownFile = path.into();
@@ -78,7 +92,12 @@ pub fn run() {
             Ok(())
         })
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![greet, load, open_file_dialogue])
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            load,
+            save,
+            open_file_dialogue
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

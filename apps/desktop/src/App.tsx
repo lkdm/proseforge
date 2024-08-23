@@ -46,10 +46,20 @@ function App() {
     }
   }
 
+  const handleSave = async () => {
+    try {
+      await invoke("save", { content });
+      console.log("Content saved:", content)
+    } catch (error) {
+      console.error("Error saving content:", error);
+    }
+  }
+
   return (
     <Layout>
       <Content>
         <button onClick={handleOpenDialogue}>Load</button>
+        <button onClick={handleSave}>Save</button>
         {!isLoading && <Editor defaultContent={content} setContent={setContent} />}
       </Content>
     </Layout>

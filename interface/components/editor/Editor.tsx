@@ -16,12 +16,15 @@ import { Document } from "@tiptap/extension-document";
 import { Text } from "@tiptap/extension-text";
 import { HardBreak } from "@tiptap/extension-hard-break";
 import Link from "@tiptap/extension-link";
+import { marked } from 'marked';
+
 import {
   useEditor,
   EditorContent,
   // FloatingMenu,
   // BubbleMenu,
 } from "@tiptap/react";
+import { useEffect } from "react";
 
 // define your extension array
 const extensions = [
@@ -46,6 +49,7 @@ const extensions = [
     openOnClick: false,
     autolink: true,
   }),
+
 ];
 
 interface Props {
@@ -53,9 +57,15 @@ interface Props {
 }
 
 const Tiptap = ({ content }: Props) => {
+  const htmlContent = marked(content);
+
+  useEffect(() => {
+    console.log("htmlContent", htmlContent);
+  }, [htmlContent]);
+
   const editor = useEditor({
     extensions,
-    content,
+    content: htmlContent,
     onUpdate: ({ editor }) => {
       console.log("Editor content:", editor.getHTML());
     },

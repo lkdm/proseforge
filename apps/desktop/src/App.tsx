@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Layout from "@md/interface/app/Layout"
 import Content from "@md/interface/app/Content"
-import Editor from "@md/interface/components/editor/Editor"
+import Editor from "@md/interface/components/Editor"
 import "./App.css";
 
 function App() {
   const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // async function greet() {
   //   // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
@@ -27,17 +28,19 @@ function App() {
         setError(JSON.stringify(error));
         console.error("Error loading content:", error);
       }
+      setIsLoading(false);
     }
 
   useEffect(() => {
     console.log("Mounting app.")
+    setIsLoading(true)
     load()
   }, [])
 
   return (
     <Layout>
       <Content>
-        <Editor content={content} />
+        {!isLoading && <Editor content={content} />}
       </Content>
     </Layout>
   );

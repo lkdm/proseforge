@@ -61,6 +61,9 @@ importers:
 
   interface:
     dependencies:
+      '@md/markdown-editor':
+        specifier: workspace:*
+        version: link:../packages/markdown-editor
       '@radix-ui/react-dropdown-menu':
         specifier: ^2.1.1
         version: 2.1.1(@types/react-dom@18.3.0)(@types/react@18.3.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -73,6 +76,88 @@ importers:
       '@tailwindcss/typography':
         specifier: ^0.5.14
         version: 0.5.14(tailwindcss@3.4.10)
+      class-variance-authority:
+        specifier: ^0.7.0
+        version: 0.7.0
+      lucide-react:
+        specifier: ^0.426.0
+        version: 0.426.0(react@18.3.1)
+      marked:
+        specifier: ^14.0.0
+        version: 14.0.0
+      postcss:
+        specifier: ^8.4.41
+        version: 8.4.41
+      prosemirror-markdown:
+        specifier: ^1.13.0
+        version: 1.13.0
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      tailwind:
+        specifier: ^4.0.0
+        version: 4.0.0
+      tailwind-merge:
+        specifier: ^2.4.0
+        version: 2.5.2
+      tailwindcss:
+        specifier: ^3.4.9
+        version: 3.4.10
+      tailwindcss-animate:
+        specifier: ^1.0.7
+        version: 1.0.7(tailwindcss@3.4.10)
+      ts-pattern:
+        specifier: ^5.3.1
+        version: 5.3.1
+    devDependencies:
+      '@eslint/js':
+        specifier: ^9.8.0
+        version: 9.9.0
+      '@types/node':
+        specifier: ^22.1.0
+        version: 22.5.0
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.4
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.0
+      '@vitejs/plugin-react':
+        specifier: ^4.3.1
+        version: 4.3.1(vite@5.4.2(@types/node@22.5.0))
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      eslint:
+        specifier: ^9.8.0
+        version: 9.9.0(jiti@1.21.6)
+      eslint-plugin-react-hooks:
+        specifier: ^5.1.0-rc.0
+        version: 5.1.0-rc-fb9a90fa48-20240614(eslint@9.9.0(jiti@1.21.6))
+      eslint-plugin-react-refresh:
+        specifier: ^0.4.9
+        version: 0.4.10(eslint@9.9.0(jiti@1.21.6))
+      globals:
+        specifier: ^15.9.0
+        version: 15.9.0
+      typescript:
+        specifier: ^5.5.3
+        version: 5.5.4
+      typescript-eslint:
+        specifier: ^8.0.0
+        version: 8.2.0(eslint@9.9.0(jiti@1.21.6))(typescript@5.5.4)
+      vite:
+        specifier: ^5.4.0
+        version: 5.4.2(@types/node@22.5.0)
+      vite-tsconfig-paths:
+        specifier: ~4.2.0
+        version: 4.2.3(typescript@5.5.4)(vite@5.4.2(@types/node@22.5.0))
+
+  packages/markdown-editor:
+    dependencies:
       '@tiptap/extension-blockquote':
         specifier: ^2.5.9
         version: 2.6.5(@tiptap/core@2.6.5(@tiptap/pm@2.6.5))
@@ -133,46 +218,25 @@ importers:
       '@tiptap/react':
         specifier: ^2.5.9
         version: 2.6.5(@tiptap/core@2.6.5(@tiptap/pm@2.6.5))(@tiptap/pm@2.6.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      class-variance-authority:
-        specifier: ^0.7.0
-        version: 0.7.0
-      lucide-react:
-        specifier: ^0.426.0
-        version: 0.426.0(react@18.3.1)
-      marked:
-        specifier: ^14.0.0
-        version: 14.0.0
-      postcss:
-        specifier: ^8.4.41
-        version: 8.4.41
+      prosemirror-markdown:
+        specifier: ^1.13.0
+        version: 1.13.0
       react:
         specifier: ^18.3.1
         version: 18.3.1
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
-      tailwind:
-        specifier: ^4.0.0
-        version: 4.0.0
-      tailwind-merge:
-        specifier: ^2.4.0
-        version: 2.5.2
-      tailwindcss:
-        specifier: ^3.4.9
-        version: 3.4.10
-      tailwindcss-animate:
-        specifier: ^1.0.7
-        version: 1.0.7(tailwindcss@3.4.10)
       tiptap-markdown:
         specifier: ^0.8.10
         version: 0.8.10(@tiptap/core@2.6.5(@tiptap/pm@2.6.5))
+      turndown:
+        specifier: ^7.2.0
+        version: 7.2.0
     devDependencies:
       '@eslint/js':
-        specifier: ^9.8.0
+        specifier: ^9.9.0
         version: 9.9.0
-      '@types/node':
-        specifier: ^22.1.0
-        version: 22.5.0
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.4
@@ -182,11 +246,8 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.3.1
         version: 4.3.1(vite@5.4.2(@types/node@22.5.0))
-      clsx:
-        specifier: ^2.1.1
-        version: 2.1.1
       eslint:
-        specifier: ^9.8.0
+        specifier: ^9.9.0
         version: 9.9.0(jiti@1.21.6)
       eslint-plugin-react-hooks:
         specifier: ^5.1.0-rc.0
@@ -201,14 +262,11 @@ importers:
         specifier: ^5.5.3
         version: 5.5.4
       typescript-eslint:
-        specifier: ^8.0.0
+        specifier: ^8.0.1
         version: 8.2.0(eslint@9.9.0(jiti@1.21.6))(typescript@5.5.4)
       vite:
-        specifier: ^5.4.0
+        specifier: ^5.4.1
         version: 5.4.2(@types/node@22.5.0)
-      vite-tsconfig-paths:
-        specifier: ~4.2.0
-        version: 4.2.3(typescript@5.5.4)(vite@5.4.2(@types/node@22.5.0))
 
 packages:
 
@@ -524,6 +582,9 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
+
+  '@mixmark-io/domino@2.2.0':
+    resolution: {integrity: sha512-Y28PR25bHXUg88kCV7nivXrP2Nj2RueZ3/l/jdx6J9f8J4nsEGcgX0Qe6lt7Pa+J79+kPiJU3LguR6O/6zrLOw==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -2765,6 +2826,9 @@ packages:
   ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
 
+  ts-pattern@5.3.1:
+    resolution: {integrity: sha512-1RUMKa8jYQdNfmnK4jyzBK3/PS/tnjcZ1CW0v1vWDeYe5RBklc/nquw03MEoB66hVBm4BnlCfmOqDVxHyT1DpA==}
+
   tsconfck@2.1.2:
     resolution: {integrity: sha512-ghqN1b0puy3MhhviwO2kGF8SeMDNhEbnKxjK7h6+fvY9JAxqvXi8y5NAHSQv687OVboS2uZIByzGd45/YxrRHg==}
     engines: {node: ^14.13.1 || ^16 || >=18}
@@ -2815,6 +2879,9 @@ packages:
   turbo@2.0.14:
     resolution: {integrity: sha512-00JjdCMD/cpsjP0Izkjcm8Oaor5yUCfDwODtaLb+WyblyadkaDEisGhy3Dbd5az9n+5iLSPiUgf+WjPbns6MRg==}
     hasBin: true
+
+  turndown@7.2.0:
+    resolution: {integrity: sha512-eCZGBN4nNNqM9Owkv9HAtWRYfLA4h909E/WGAWWBpmB275ehNhZyk87/Tpvjbp0jjNl9XwCsbe6bm6CqFsgD+A==}
 
   type-check@0.4.0:
     resolution: {integrity: sha512-XleUoc9uwGXqjWwXaUTZAmzMcFZ5858QA2vvx1Ur5xIcixXIP+8LnFDgRplU30us6teqdlskFfu+ae4K79Ooew==}
@@ -3316,6 +3383,8 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
+
+  '@mixmark-io/domino@2.2.0': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -5733,6 +5802,8 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
+  ts-pattern@5.3.1: {}
+
   tsconfck@2.1.2(typescript@5.5.4):
     optionalDependencies:
       typescript: 5.5.4
@@ -5767,6 +5838,10 @@ snapshots:
       turbo-linux-arm64: 2.0.14
       turbo-windows-64: 2.0.14
       turbo-windows-arm64: 2.0.14
+
+  turndown@7.2.0:
+    dependencies:
+      '@mixmark-io/domino': 2.2.0
 
   type-check@0.4.0:
     dependencies:

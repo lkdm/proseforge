@@ -1,0 +1,52 @@
+{
+  "name": "@md/markdown-editor",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "@tiptap/extension-blockquote": "^2.5.9",
+    "@tiptap/extension-bold": "^2.5.9",
+    "@tiptap/extension-bullet-list": "^2.5.9",
+    "@tiptap/extension-document": "^2.5.9",
+    "@tiptap/extension-hard-break": "^2.5.9",
+    "@tiptap/extension-heading": "^2.5.9",
+    "@tiptap/extension-history": "^2.5.9",
+    "@tiptap/extension-horizontal-rule": "^2.5.9",
+    "@tiptap/extension-italic": "^2.5.9",
+    "@tiptap/extension-link": "^2.5.9",
+    "@tiptap/extension-list-item": "^2.5.9",
+    "@tiptap/extension-list-keymap": "^2.5.9",
+    "@tiptap/extension-ordered-list": "^2.5.9",
+    "@tiptap/extension-paragraph": "^2.5.9",
+    "@tiptap/extension-strike": "^2.5.9",
+    "@tiptap/extension-text": "^2.5.9",
+    "@tiptap/extension-typography": "^2.5.9",
+    "@tiptap/extension-underline": "^2.5.9",
+    "@tiptap/pm": "^2.5.9",
+    "@tiptap/react": "^2.5.9",
+    "prosemirror-markdown": "^1.13.0",
+    "tiptap-markdown": "^0.8.10",
+    "turndown": "^7.2.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "eslint": "^9.9.0",
+    "eslint-plugin-react-hooks": "^5.1.0-rc.0",
+    "eslint-plugin-react-refresh": "^0.4.9",
+    "globals": "^15.9.0",
+    "typescript": "^5.5.3",
+    "typescript-eslint": "^8.0.1",
+    "vite": "^5.4.1"
+  }
+}

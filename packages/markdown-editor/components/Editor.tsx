@@ -1,3 +1,4 @@
+import React from "react"
 import { Paragraph } from "@tiptap/extension-paragraph";
 import { Blockquote } from "@tiptap/extension-blockquote";
 import { BulletList } from "@tiptap/extension-bullet-list";
@@ -16,7 +17,6 @@ import { Document } from "@tiptap/extension-document";
 import { Text } from "@tiptap/extension-text";
 import { HardBreak } from "@tiptap/extension-hard-break";
 import Link from "@tiptap/extension-link";
-import { marked } from 'marked';
 
 import {
   useEditor,
@@ -24,7 +24,6 @@ import {
   // FloatingMenu,
   // BubbleMenu,
 } from "@tiptap/react";
-import { useEffect } from "react";
 
 // define your extension array
 const extensions = [
@@ -57,15 +56,12 @@ interface Props {
 }
 
 const Tiptap = ({ content }: Props) => {
-  const htmlContent = marked(content);
-
-  useEffect(() => {
-    console.log("htmlContent", htmlContent);
-  }, [htmlContent]);
-
   const editor = useEditor({
     extensions,
-    content: htmlContent,
+    content,
+    onCreate: ({ editor }) => {
+      console.log("Editor created:", editor.getHTML());
+    },
     onUpdate: ({ editor }) => {
       console.log("Editor content:", editor.getHTML());
     },

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Layout from "@md/interface/app/Layout"
 import Content from "@md/interface/app/Content"
@@ -6,7 +6,8 @@ import Editor from "@md/interface/components/Editor"
 import Document from "@md/interface/app/Document"
 import { ThemeProvider } from "@md/interface/providers/ThemeProvider"
 import "./App.css";
-import { listen } from '@tauri-apps/api/event';
+import { listen, UnlistenFn } from '@tauri-apps/api/event';
+import debounce from 'lodash/debounce';
 
 interface Config {
   theme: 'system' | 'light' | 'dark'
@@ -15,18 +16,9 @@ interface Config {
 function App() {
   const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [config, setConfig] = useState<Config | null>(null);
-
-  // async function greet() {
-  //   // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-  //   setGreetMsg(await invoke("greet", { name }));
-  // }
-
-  // async function load() {
-  //   setContent(await invoke("load"))
-  // }
-  //
+  const [eventTimestamp, setEventTimestamp] = useState<number>(0);
 
   async function getConfig() {
     try {
@@ -41,51 +33,43 @@ function App() {
     }
   }
 
-  async function load() {
-    setIsLoading(true)
-      try {
-        const result = await invoke("load");
-        setContent(result as string);
-        console.log("Content loaded:", result)
-      } catch (error) {
-        setError(JSON.stringify(error));
-        console.error("Error loading content:", error);
-      }
-      setIsLoading(false);
-    }
-
   useEffect(() => {
     console.log("Mounting app.")
     getConfig()
-    load()
   }, [])
 
-  listen('file-opened', (event) => {
-    load();
-  });
 
+  useEffect(() => {
+    let unlistenFunction: UnlistenFn | null = null;
 
-  const handleOpenDialogue = async () => {
-    try {
-      await invoke("open_file_dialogue");
-      await load();
-    } catch (error) {
-      console.error("Error opening dialogue:", error);
+    async function setupListener() {
+      unlistenFunction = await listen('file-opened', (event) => {
+        setIsLoading(true);
+        const { content: newContent, timestamp } = event.payload.DocumentLoad as {
+            content: string;
+            timestamp: number;
+          };
+        console.log(timestamp, newContent)
+        setContent(newContent || '');
+        setEventTimestamp(timestamp);
+        setIsLoading(false);
+      });
     }
-  }
 
-  const handleSave = async () => {
-    try {
-      await invoke("save", { content });
-      console.log("Content saved:", content)
-    } catch (error) {
-      console.error("Error saving content:", error);
-    }
-  }
+    setupListener();
 
-  listen('file-save', () => {
-    handleSave();
-  })
+    // Cleanup listener on unmount
+    return () => {
+      if (unlistenFunction) {
+        unlistenFunction();
+      }
+    };
+  }, [eventTimestamp]);
+
+  const handleUpdate = debounce((content: string) => {
+    setContent(content);
+    invoke("handle_update_content", { content })
+  }, 150)
 
   if (!config) return <div>Loading...</div>
 
@@ -94,7 +78,9 @@ function App() {
     <Layout>
       <Content>
           <Document>
-        {!isLoading && <Editor defaultContent={content} setContent={setContent} />}
+        {isLoading
+        ? <>Loading...</>
+              : <Editor defaultContent={content} setContent={handleUpdate} eventTimestamp={eventTimestamp}  />}
           </Document>
       </Content>
     </Layout>

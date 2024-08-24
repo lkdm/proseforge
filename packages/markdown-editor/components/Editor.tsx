@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { defaultValueCtx, Editor, rootCtx } from '@milkdown/kit/core';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { defaultValueCtx, Editor, rootCtx, editorViewCtx } from '@milkdown/kit/core';
 import { nord } from '@milkdown/theme-nord';
 import { Milkdown, MilkdownProvider, useEditor } from '@milkdown/react';
 import { listener, listenerCtx } from "@milkdown/plugin-listener";
@@ -17,6 +17,7 @@ interface EditorProps {
 }
 
 const MilkdownEditor = ({defaultContent, setContent, eventTimestamp}: EditorProps) => {
+
     const { get } = useEditor((root) =>
       Editor.make()
         .config(nord)
@@ -46,11 +47,6 @@ const MilkdownEditor = ({defaultContent, setContent, eventTimestamp}: EditorProp
         .use(listener),
       [eventTimestamp]
   );
-
-    useEffect(() => {
-      console.log("Milkdown re-rend")
-    }, [])
-
   return <Milkdown />;
 };
 

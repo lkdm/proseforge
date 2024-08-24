@@ -36,7 +36,6 @@ pub enum NodeError {
     },
 }
 
-// we must manually implement serde::Serialize
 impl serde::Serialize for NodeError {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

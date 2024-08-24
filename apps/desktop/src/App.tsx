@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Layout from "@md/interface/app/Layout"
 import Content from "@md/interface/app/Content"
@@ -16,7 +16,7 @@ interface Config {
 function App() {
   const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [config, setConfig] = useState<Config | null>(null);
   const [eventTimestamp, setEventTimestamp] = useState<number>(0);
 
@@ -70,14 +70,6 @@ function App() {
     setContent(content);
     invoke("handle_update_content", { content })
   }, 150)
-
-  useEffect(() => {
-      console.log("Editor re-rendered with timestamp:", eventTimestamp);
-    }, [eventTimestamp]);
-
-  useEffect(() => {
-    console.log("isLoading changed:", isLoading);
-  }, [isLoading]);
 
   if (!config) return <div>Loading...</div>
 

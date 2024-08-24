@@ -1,8 +1,7 @@
 use md_core::config::{Config, Theme};
-use md_core::error::CoreError;
-use md_core::md::DataStorage;
-use md_core::md::MarkdownFile;
-use md_core::md::*;
+use md_core::data::*;
+use md_core::error::NodeError;
+use md_core::event::CoreEvent;
 use md_core::Node;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -12,6 +11,7 @@ use tauri::menu::{
 };
 use tauri::{async_runtime::block_on, TitleBarStyle, WebviewUrl, WebviewWindowBuilder};
 use tauri::{AppHandle, Emitter, Manager};
+use tauri_plugin_dialog::DialogExt;
 use tokio::task::block_in_place;
 
 // the payload type must implement `Serialize` and `Clone`.
@@ -20,53 +20,91 @@ struct Payload {
     message: String,
 }
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
-#[tauri::command]
-async fn load(state: tauri::State<'_, Mutex<Node>>) -> Result<String, CoreError> {
-    let state = state.lock().unwrap();
-    let editor = state.editor.clone();
-    Ok(editor.content())
-}
-
-#[tauri::command]
-async fn save(content: &str, state: tauri::State<'_, Mutex<Node>>) -> Result<(), CoreError> {
-    let mut state = state.lock().unwrap();
-    // Use Arc::get_mut to get a mutable reference to MarkdownFile
-    // Note: This only works if there's exactly one Arc pointer to the data
-    let editor = match Arc::get_mut(&mut state.editor) {
-        Some(editor) => editor,
-        None => return Err(CoreError::multiple_arc_references()),
-    };
-    editor.set_content(content);
-    editor.write()?;
+async fn handle_update_content(
+    content: String,
+    state: tauri::State<'_, Mutex<Node>>,
+) -> Result<(), NodeError> {
+    state.lock().unwrap().handle_update_content(content)?;
     Ok(())
 }
 
 #[tauri::command]
-async fn open_file_dialogue(
+async fn handle_open_dialog(
     app: AppHandle,
     state: tauri::State<'_, Mutex<Node>>,
-) -> Result<(), CoreError> {
-    app.emit("file-opening", 1).unwrap();
+) -> Result<(), NodeError> {
     let path = open_file_dialog()?;
-    let mut md: MarkdownFile = path.into();
-    let mut state = state.lock().unwrap();
-    md.read()?;
-    state.editor = Arc::new(md);
-    app.emit("file-opened", 1).unwrap();
+    let state = state.lock().unwrap();
+    let mut txt = state.editor.lock().unwrap();
+    txt.set_save_location(path);
+    txt.load()?;
+    let evt = CoreEvent::document_load(txt.get_content());
+    app.emit("file-opened", evt).unwrap();
     Ok(())
 }
 
 #[tauri::command]
-async fn get_config(state: tauri::State<'_, Mutex<Node>>) -> Result<Config, CoreError> {
-    let state = state.lock().map_err(|_| CoreError::blocking_error())?;
+async fn handle_save(state: tauri::State<'_, Mutex<Node>>) -> Result<(), NodeError> {
+    let state = state.lock().unwrap();
+    let result = {
+        // Lock the editor and attempt to save
+        match state.handle_save() {
+            Ok(()) => Ok(()),
+            Err(NodeError::NoSavePath) => {
+                // Open a save location dialog
+                let path = match open_file_save_dialog() {
+                    Ok(path) => path,
+                    Err(_) => return Ok(()), // User cancelled the dialog
+                };
+
+                // Re-acquire the lock on editor to update the save location and retry saving
+                let mut editor = state.editor.lock().unwrap();
+                editor.set_save_location(path);
+
+                // Retry saving
+                editor.save()
+            }
+            Err(e) => Err(e),
+        }
+    };
+    result
+}
+
+#[tauri::command]
+async fn get_config(state: tauri::State<'_, Mutex<Node>>) -> Result<Config, NodeError> {
+    let state = state.lock().map_err(|_| NodeError::BlockingError)?;
     let config = state.config.clone();
     Ok(config.as_ref().clone())
+}
+
+#[tauri::command]
+async fn handle_new_file(
+    app: AppHandle,
+    state: tauri::State<'_, Mutex<Node>>,
+) -> Result<(), NodeError> {
+    // Check if the current document has unsaved changes
+    // TODO: build dialogue for unsaved changes
+
+    let state = state.lock().unwrap();
+    match state.handle_new_document(false) {
+        Ok(_) => {}
+        Err(NodeError::FileNotSaved) => {
+            let force = open_save_warning_dialog();
+            if force {
+                state.handle_new_document(true)?;
+            } else {
+                return Ok(()); // User cancelled the dialog
+            }
+        }
+        Err(e) => {
+            eprintln!("Error creating new document: {:?}", e);
+            return Err(e);
+        }
+    }
+    let evt = CoreEvent::document_load(String::new());
+    app.emit("file-opened", evt).unwrap();
+    Ok(())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -98,9 +136,16 @@ pub fn run() {
                         .build(),
                 ))
                 .separator()
+                .close_window()
+                .quit()
                 .build()?;
 
             let file_submenu = SubmenuBuilder::new(handle, "File")
+                .item(
+                    &MenuItemBuilder::with_id("NEW", "New")
+                        .accelerator("CmdOrControl+N")
+                        .build(handle)?,
+                )
                 .item(
                     &MenuItemBuilder::with_id("OPEN", "Open")
                         .accelerator("CmdOrControl+O")
@@ -113,6 +158,7 @@ pub fn run() {
                 )
                 .build()?;
             let edit_submenu = SubmenuBuilder::new(handle, "Edit")
+                .cut()
                 .copy()
                 .paste()
                 .separator()
@@ -131,11 +177,14 @@ pub fn run() {
             // Events
 
             handle.on_menu_event(move |handle, event| {
+                if event.id() == "NEW" {
+                    block_on(handle_new_file(handle.clone(), handle.state())).unwrap();
+                }
                 if event.id() == "OPEN" {
-                    block_on(open_file_dialogue(handle.clone(), handle.state())).unwrap();
+                    block_on(handle_open_dialog(handle.clone(), handle.state())).unwrap();
                 }
                 if event.id() == "SAVE" {
-                    handle.emit("file-save", 1).unwrap();
+                    block_on(handle_save(handle.state())).unwrap();
                 }
             });
 
@@ -174,12 +223,11 @@ pub fn run() {
             Ok(())
         })
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
-            greet,
-            load,
-            save,
-            open_file_dialogue,
-            get_config
+            handle_open_dialog,
+            get_config,
+            handle_update_content
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

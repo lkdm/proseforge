@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { defaultValueCtx, Editor, rootCtx } from '@milkdown/kit/core';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { defaultValueCtx, Editor, rootCtx, editorViewCtx } from '@milkdown/kit/core';
 import { nord } from '@milkdown/theme-nord';
 import { Milkdown, MilkdownProvider, useEditor } from '@milkdown/react';
 import { listener, listenerCtx } from "@milkdown/plugin-listener";
@@ -13,9 +13,10 @@ import { commonmark } from '@milkdown/kit/preset/commonmark';
 interface EditorProps {
   defaultContent: string;
   setContent: (content: string) => void;
+  eventTimestamp?: number;
 }
 
-const MilkdownEditor = ({defaultContent, setContent}: EditorProps) => {
+const MilkdownEditor = ({defaultContent, setContent, eventTimestamp}: EditorProps) => {
 
     const { get } = useEditor((root) =>
       Editor.make()
@@ -37,14 +38,15 @@ const MilkdownEditor = ({defaultContent, setContent}: EditorProps) => {
                 );
                 setContent(markdown);
               })
+            .destroy(() => console.log("Destroyed"))
         })
         .use(commonmark)
         .use(history)
         .use(clipboard)
         .use(indent)
-        .use(listener)
+        .use(listener),
+      [eventTimestamp]
   );
-
   return <Milkdown />;
 };
 

@@ -32,16 +32,20 @@ impl Node {
     }
 
     // Create new document.
-    pub fn handle_new_document(&self) -> Result<(), NodeError> {
-        let mut editor = self.editor.lock().unwrap();
+    pub fn handle_new_document(&self, force: bool) -> Result<(), NodeError> {
+        let editor = self.editor.lock().unwrap();
+        if !force && editor.has_unsaved_changes() {
+            return Err(NodeError::FileNotSaved);
+        }
         let new = TextFile::new(None);
+        let mut editor = editor;
         *editor = new;
         Ok(())
     }
 
     // Save the document.
     pub fn handle_save(&self) -> Result<(), NodeError> {
-        let editor = self.editor.lock().unwrap();
+        let mut editor = self.editor.lock().unwrap();
         editor.save()
     }
 }

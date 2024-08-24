@@ -3,6 +3,21 @@
 version = 3
 
 [[package]]
+name = "Proseforge"
+version = "0.0.0"
+dependencies = [
+ "cocoa 0.25.0",
+ "md_core",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-shell",
+ "tokio",
+]
+
+[[package]]
 name = "addr2line"
 version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -840,21 +855,6 @@ dependencies = [
  "quote",
  "rustc_version",
  "syn 2.0.75",
-]
-
-[[package]]
-name = "desktop"
-version = "0.0.0"
-dependencies = [
- "cocoa 0.25.0",
- "md_core",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-shell",
- "tokio",
 ]
 
 [[package]]

@@ -128,7 +128,7 @@ pub fn run() {
             let app_submenu = SubmenuBuilder::new(handle, "Application")
                 .about(Some(
                     AboutMetadataBuilder::new()
-                        .name("Markdown Editor".into())
+                        .name("Proseforge".into())
                         .version("0.1.0".into())
                         .authors(vec!["Luke Martin".into()].into())
                         .website("https://lukm.dev/".into())
@@ -190,7 +190,7 @@ pub fn run() {
 
             // Create the main window
             let win_builder = WebviewWindowBuilder::new(handle, "main", WebviewUrl::default())
-                .title("Markdown Editor")
+                .title("Proseforge")
                 .inner_size(800.0, 600.0);
 
             // set transparent title bar only when building for macOS

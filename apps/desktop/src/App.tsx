@@ -64,6 +64,7 @@ function App() {
     load();
   });
 
+
   const handleOpenDialogue = async () => {
     try {
       await invoke("open_file_dialogue");
@@ -82,14 +83,16 @@ function App() {
     }
   }
 
+  listen('file-save', () => {
+    handleSave();
+  })
+
   if (!config) return <div>Loading...</div>
 
   return (
     <ThemeProvider defaultTheme={config.theme}>
     <Layout>
       <Content>
-        <button onClick={handleOpenDialogue}>Load</button>
-        <button onClick={handleSave}>Save</button>
           <Document>
         {!isLoading && <Editor defaultContent={content} setContent={setContent} />}
           </Document>

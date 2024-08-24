@@ -1,7 +1,7 @@
 {
-  "productName": "Markdown Editor",
+  "productName": "Proseforge",
   "version": "0.0.0",
-  "identifier": "com.desktop.dev",
+  "identifier": "com.proseforge.dev",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",

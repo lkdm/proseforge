@@ -132,8 +132,10 @@ pub fn run() {
 
             handle.on_menu_event(move |handle, event| {
                 if event.id() == "OPEN" {
-                    let h = handle.clone();
-                    block_on(open_file_dialogue(h, handle.state())).unwrap();
+                    block_on(open_file_dialogue(handle.clone(), handle.state())).unwrap();
+                }
+                if event.id() == "SAVE" {
+                    handle.emit("file-save", 1).unwrap();
                 }
             });
 

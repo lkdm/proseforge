@@ -158,6 +158,7 @@ pub fn run() {
                 )
                 .build()?;
             let edit_submenu = SubmenuBuilder::new(handle, "Edit")
+                .cut()
                 .copy()
                 .paste()
                 .separator()

@@ -166,8 +166,8 @@ pub fn open_file_save_dialog() -> Result<PathBuf, NodeError> {
 
 pub fn open_save_warning_dialog() -> bool {
     let dialog = MessageDialog::new()
-        .set_title("Warning")
-        .set_description("You have unsaved changes. Do you want to save?")
+        .set_title("Unsaved Changes")
+        .set_description("You have unsaved changes. Do you want to continue?")
         .set_buttons(MessageButtons::YesNo);
     dialog.show() == MessageDialogResult::Yes
 }

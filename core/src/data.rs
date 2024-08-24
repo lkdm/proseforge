@@ -142,6 +142,15 @@ pub fn open_file_dialog() -> Result<PathBuf, NodeError> {
         Err(NodeError::NoOpenPath)
     }
 }
+pub fn open_file_save_dialog() -> Result<PathBuf, NodeError> {
+    let dir = PathBuf::from("/");
+    let file_dialog_res = FileDialog::new().set_directory(dir).save_file();
+    if let Some(file_handle) = file_dialog_res {
+        Ok(file_handle.to_path_buf())
+    } else {
+        Err(NodeError::NoSavePath)
+    }
+}
 
 #[cfg(test)]
 mod tests {

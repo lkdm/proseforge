@@ -3,6 +3,8 @@ import { invoke } from "@tauri-apps/api/core";
 import Layout from "@md/interface/app/Layout"
 import Content from "@md/interface/app/Content"
 import Editor from "@md/interface/components/Editor"
+import Document from "@md/interface/app/Document"
+import { ThemeProvider } from "@md/interface/providers/ThemeProvider"
 import "./App.css";
 
 function App() {
@@ -56,13 +58,17 @@ function App() {
   }
 
   return (
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
     <Layout>
       <Content>
         <button onClick={handleOpenDialogue}>Load</button>
         <button onClick={handleSave}>Save</button>
+          <Document>
         {!isLoading && <Editor defaultContent={content} setContent={setContent} />}
+          </Document>
       </Content>
     </Layout>
+    </ThemeProvider>
   );
 }
 

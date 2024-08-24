@@ -1128,28 +1128,16 @@ body {
   display: flex;
 }
 
+.h-screen {
+  height: 100vh;
+}
+
 .w-full {
   width: 100%;
 }
 
 .min-w-80 {
   min-width: 20rem;
-}
-
-.\!max-w-none {
-  max-width: none !important;
-}
-
-.max-w-5xl {
-  max-width: 64rem;
-}
-
-.max-w-4xl {
-  max-width: 56rem;
-}
-
-.max-w-3xl {
-  max-width: 48rem;
 }
 
 .max-w-2xl {
@@ -1201,6 +1189,35 @@ body {
 .prose {
   /* It's so dumb that I have to override this here. */
   max-width: none;
+  p {
+    margin-top: 0rem;
+    margin-bottom: 0rem;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    text-align: left;
+  }
+  h1 {
+    margin-top: 2rem;
+    margin-bottom: 1.4rem;
+    line-height: 0.8rem;
+    font-size: 2rem;
+  }
+  h2 {
+    margin-top: 1rem;
+    margin-bottom: 0.4rem;
+  }
+  h3 {
+    margin-top: 1rem;
+    margin-bottom: 0.4rem;
+    line-height: 1.6rem;
+  }
+  h5, h6 {
+    font-weight: bold;
+    line-height: 1.8rem;
+  }
+  ul li, ol li {
+    line-height: 1
+  }
 }
 
 .dark\:prose-invert:is(.dark *) {

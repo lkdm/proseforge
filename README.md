@@ -1,5 +1,6 @@
+<div style="text-align:center">
 ![Proseforge icon](https://github.com/lkdm/proseforge/blob/main/apps/desktop/src-tauri/icons/128x128.png)
-
+</div>
 
 # Proseforge
 

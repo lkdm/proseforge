@@ -6,6 +6,7 @@ import Editor from "@md/interface/components/Editor"
 import Document from "@md/interface/app/Document"
 import { ThemeProvider } from "@md/interface/providers/ThemeProvider"
 import "./App.css";
+import { listen } from '@tauri-apps/api/event';
 
 interface Config {
   theme: 'system' | 'light' | 'dark'
@@ -58,6 +59,10 @@ function App() {
     getConfig()
     load()
   }, [])
+
+  listen('file-opened', (event) => {
+    load();
+  });
 
   const handleOpenDialogue = async () => {
     try {

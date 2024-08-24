@@ -7,10 +7,18 @@ use md_core::Node;
 use std::sync::Arc;
 use std::sync::Mutex;
 use tauri::menu::{
-    CheckMenuItemBuilder, MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder,
+    AboutMetadata, AboutMetadataBuilder, CheckMenuItemBuilder, MenuBuilder, MenuItemBuilder,
+    PredefinedMenuItem, SubmenuBuilder,
 };
-use tauri::{async_runtime::block_on, Manager, TitleBarStyle, WebviewUrl, WebviewWindowBuilder};
+use tauri::{async_runtime::block_on, TitleBarStyle, WebviewUrl, WebviewWindowBuilder};
+use tauri::{AppHandle, Emitter, Manager};
 use tokio::task::block_in_place;
+
+// the payload type must implement `Serialize` and `Clone`.
+#[derive(Clone, serde::Serialize)]
+struct Payload {
+    message: String,
+}
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
@@ -40,12 +48,17 @@ async fn save(content: &str, state: tauri::State<'_, Mutex<Node>>) -> Result<(),
 }
 
 #[tauri::command]
-async fn open_file_dialogue(state: tauri::State<'_, Mutex<Node>>) -> Result<(), CoreError> {
+async fn open_file_dialogue(
+    app: AppHandle,
+    state: tauri::State<'_, Mutex<Node>>,
+) -> Result<(), CoreError> {
+    app.emit("file-opening", 1).unwrap();
     let path = open_file_dialog()?;
     let mut md: MarkdownFile = path.into();
     let mut state = state.lock().unwrap();
     md.read()?;
     state.editor = Arc::new(md);
+    app.emit("file-opened", 1).unwrap();
     Ok(())
 }
 
@@ -59,7 +72,9 @@ async fn get_config(state: tauri::State<'_, Mutex<Node>>) -> Result<Config, Core
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .setup(|app| {
+        .setup(move |app| {
+            let handle = app.handle();
+
             // Create a new Node instance
             let node = match Node::new() {
                 Ok(node) => node,
@@ -69,17 +84,61 @@ pub fn run() {
                 }
             };
             let config = node.config.clone();
-            app.manage(Mutex::new(node));
+            handle.manage(Mutex::new(node));
 
             // Tauri-specific
-            let submenu = SubmenuBuilder::new(app, "Sub")
-                .text(1, "Tauri")
+            let app_submenu = SubmenuBuilder::new(handle, "Application")
+                .about(Some(
+                    AboutMetadataBuilder::new()
+                        .name("Markdown Editor".into())
+                        .version("0.1.0".into())
+                        .authors(vec!["Luke Martin".into()].into())
+                        .website("https://lukm.dev/".into())
+                        .comments("A simple markdown editor".into())
+                        .build(),
+                ))
                 .separator()
                 .build()?;
-            let menu = MenuBuilder::new(app).item(&submenu).build()?;
+
+            let file_submenu = SubmenuBuilder::new(handle, "File")
+                .item(
+                    &MenuItemBuilder::with_id("OPEN", "Open")
+                        .accelerator("CmdOrControl+O")
+                        .build(handle)?,
+                )
+                .item(
+                    &MenuItemBuilder::with_id("SAVE", "Save")
+                        .accelerator("CmdOrControl+S")
+                        .build(handle)?,
+                )
+                .build()?;
+            let edit_submenu = SubmenuBuilder::new(handle, "Edit")
+                .copy()
+                .paste()
+                .separator()
+                .undo()
+                .redo()
+                .separator()
+                .select_all()
+                .build()?;
+            let menu = MenuBuilder::new(handle)
+                .item(&app_submenu)
+                .item(&file_submenu)
+                .item(&edit_submenu)
+                .build()?;
             app.set_menu(menu)?;
 
-            let win_builder = WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
+            // Events
+
+            handle.on_menu_event(move |handle, event| {
+                if event.id() == "OPEN" {
+                    let h = handle.clone();
+                    block_on(open_file_dialogue(h, handle.state())).unwrap();
+                }
+            });
+
+            // Create the main window
+            let win_builder = WebviewWindowBuilder::new(handle, "main", WebviewUrl::default())
                 .title("Markdown Editor")
                 .inner_size(800.0, 600.0);
 

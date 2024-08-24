@@ -1,5 +1,7 @@
 <div style="text-align:center">
-  <img width="150" height="150" src="https://github.com/lkdm/proseforge/blob/main/apps/desktop/src-tauri/icons/128x128.png" alt="Proseforge logo">
+  <p align="center">
+    <img width="150" height="150" src="https://github.com/lkdm/proseforge/blob/main/apps/desktop/src-tauri/icons/128x128.png" alt="Proseforge logo">
+  </p>
 </div>
 
 # Proseforge

@@ -11,6 +11,7 @@ use tauri::menu::{
 };
 use tauri::{async_runtime::block_on, TitleBarStyle, WebviewUrl, WebviewWindowBuilder};
 use tauri::{AppHandle, Emitter, Manager};
+use tauri_plugin_dialog::DialogExt;
 use tokio::task::block_in_place;
 
 // the payload type must implement `Serialize` and `Clone`.
@@ -82,7 +83,25 @@ async fn handle_new_file(
     app: AppHandle,
     state: tauri::State<'_, Mutex<Node>>,
 ) -> Result<(), NodeError> {
-    state.lock().unwrap().handle_new_document()?;
+    // Check if the current document has unsaved changes
+    // TODO: build dialogue for unsaved changes
+
+    let state = state.lock().unwrap();
+    match state.handle_new_document(false) {
+        Ok(_) => {}
+        Err(NodeError::FileNotSaved) => {
+            let force = open_save_warning_dialog();
+            if force {
+                state.handle_new_document(true)?;
+            } else {
+                return Ok(()); // User cancelled the dialog
+            }
+        }
+        Err(e) => {
+            eprintln!("Error creating new document: {:?}", e);
+            return Err(e);
+        }
+    }
     let evt = CoreEvent::document_load(String::new());
     app.emit("file-opened", evt).unwrap();
     Ok(())

@@ -1,5 +1,5 @@
 use crate::error::NodeError;
-use rfd::FileDialog;
+use rfd::{FileDialog, MessageButtons, MessageDialog, MessageDialogResult};
 use serde::{Deserialize, Serialize};
 use std::{
     fs::{self, File},
@@ -47,7 +47,7 @@ pub trait ContentRepository {
     fn load(&mut self) -> Result<(), NodeError>;
 
     // Saves the current content to storage
-    fn save(&self) -> Result<(), NodeError>;
+    fn save(&mut self) -> Result<(), NodeError>;
 
     fn new(location: Option<SaveLocation>) -> Self
     where
@@ -65,12 +65,16 @@ pub trait ContentRepository {
 
     // Retrieves the save location or identifier for storage
     fn get_save_location(&self) -> Option<SaveLocation>;
+
+    // Check for unsaved changes
+    fn has_unsaved_changes(&self) -> bool;
 }
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct TextFile {
     path: Option<PathBuf>,
     content: String,
+    modified: bool,
 }
 
 impl Default for TextFile {
@@ -78,6 +82,7 @@ impl Default for TextFile {
         TextFile {
             content: String::from(DOCUMENTATION_STR),
             path: None,
+            modified: false,
         }
     }
 }
@@ -91,7 +96,7 @@ impl ContentRepository for TextFile {
         self.content = content;
         Ok(())
     }
-    fn save(&self) -> Result<(), NodeError> {
+    fn save(&mut self) -> Result<(), NodeError> {
         let file = match &self.path {
             Some(path) => File::create(path)?,
             None => return Err(NodeError::NoSavePath),
@@ -99,6 +104,7 @@ impl ContentRepository for TextFile {
         let mut buf_writer = BufWriter::new(file);
         buf_writer.write_all(self.content.as_bytes())?;
         buf_writer.flush()?;
+        self.modified = false;
         Ok(())
     }
     fn new(location: Option<SaveLocation>) -> Self {
@@ -110,10 +116,12 @@ impl ContentRepository for TextFile {
         TextFile {
             path,
             content: String::from(""),
+            modified: false,
         }
     }
     fn update_content(&mut self, content: String) {
         self.content = content;
+        self.modified = true;
     }
     fn get_content(&self) -> String {
         self.content.clone()
@@ -130,6 +138,10 @@ impl ContentRepository for TextFile {
 
     fn get_save_location(&self) -> Option<SaveLocation> {
         self.path.clone().map(SaveLocation::PathBuf)
+    }
+
+    fn has_unsaved_changes(&self) -> bool {
+        self.modified
     }
 }
 
@@ -150,6 +162,14 @@ pub fn open_file_save_dialog() -> Result<PathBuf, NodeError> {
     } else {
         Err(NodeError::NoSavePath)
     }
+}
+
+pub fn open_save_warning_dialog() -> bool {
+    let dialog = MessageDialog::new()
+        .set_title("Warning")
+        .set_description("You have unsaved changes. Do you want to save?")
+        .set_buttons(MessageButtons::YesNo);
+    dialog.show() == MessageDialogResult::Yes
 }
 
 #[cfg(test)]

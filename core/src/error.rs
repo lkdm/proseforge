@@ -34,6 +34,8 @@ pub enum NodeError {
         #[source]
         source: Option<Box<dyn std::error::Error>>,
     },
+    #[error("Unsaved Changes: The file has unsaved changes.")]
+    FileNotSaved,
 }
 
 impl serde::Serialize for NodeError {

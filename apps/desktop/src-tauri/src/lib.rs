@@ -1,8 +1,6 @@
 use md_core::config::{Config, Theme};
-use md_core::error::CoreError;
-use md_core::md::DataStorage;
-use md_core::md::MarkdownFile;
-use md_core::md::*;
+use md_core::data::*;
+use md_core::error::NodeError;
 use md_core::Node;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -20,51 +18,40 @@ struct Payload {
     message: String,
 }
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
-#[tauri::command]
-async fn load(state: tauri::State<'_, Mutex<Node>>) -> Result<String, CoreError> {
+async fn handle_update_content(
+    content: String,
+    state: tauri::State<'_, Mutex<Node>>,
+) -> Result<(), NodeError> {
     let state = state.lock().unwrap();
-    let editor = state.editor.clone();
-    Ok(editor.content())
-}
-
-#[tauri::command]
-async fn save(content: &str, state: tauri::State<'_, Mutex<Node>>) -> Result<(), CoreError> {
-    let mut state = state.lock().unwrap();
-    // Use Arc::get_mut to get a mutable reference to MarkdownFile
-    // Note: This only works if there's exactly one Arc pointer to the data
-    let editor = match Arc::get_mut(&mut state.editor) {
-        Some(editor) => editor,
-        None => return Err(CoreError::multiple_arc_references()),
-    };
-    editor.set_content(content);
-    editor.write()?;
+    state.editor.lock().unwrap().update_content(content);
     Ok(())
 }
 
 #[tauri::command]
-async fn open_file_dialogue(
+async fn handle_open_dialog(
     app: AppHandle,
     state: tauri::State<'_, Mutex<Node>>,
-) -> Result<(), CoreError> {
-    app.emit("file-opening", 1).unwrap();
+) -> Result<(), NodeError> {
     let path = open_file_dialog()?;
-    let mut md: MarkdownFile = path.into();
-    let mut state = state.lock().unwrap();
-    md.read()?;
-    state.editor = Arc::new(md);
-    app.emit("file-opened", 1).unwrap();
+    let state = state.lock().unwrap();
+    let mut txt = state.editor.lock().unwrap();
+    txt.set_save_location(path);
+    txt.load()?;
+    app.emit("file-opened", txt.get_content()).unwrap();
     Ok(())
 }
 
 #[tauri::command]
-async fn get_config(state: tauri::State<'_, Mutex<Node>>) -> Result<Config, CoreError> {
-    let state = state.lock().map_err(|_| CoreError::blocking_error())?;
+async fn handle_save(state: tauri::State<'_, Mutex<Node>>) -> Result<(), NodeError> {
+    let state = state.lock().unwrap();
+    state.editor.lock().unwrap().save()?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn get_config(state: tauri::State<'_, Mutex<Node>>) -> Result<Config, NodeError> {
+    let state = state.lock().map_err(|_| NodeError::BlockingError)?;
     let config = state.config.clone();
     Ok(config.as_ref().clone())
 }
@@ -98,6 +85,8 @@ pub fn run() {
                         .build(),
                 ))
                 .separator()
+                .close_window()
+                .quit()
                 .build()?;
 
             let file_submenu = SubmenuBuilder::new(handle, "File")
@@ -132,10 +121,10 @@ pub fn run() {
 
             handle.on_menu_event(move |handle, event| {
                 if event.id() == "OPEN" {
-                    block_on(open_file_dialogue(handle.clone(), handle.state())).unwrap();
+                    block_on(handle_open_dialog(handle.clone(), handle.state())).unwrap();
                 }
                 if event.id() == "SAVE" {
-                    handle.emit("file-save", 1).unwrap();
+                    block_on(handle_save(handle.state())).unwrap();
                 }
             });
 
@@ -175,11 +164,9 @@ pub fn run() {
         })
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
-            greet,
-            load,
-            save,
-            open_file_dialogue,
-            get_config
+            handle_open_dialog,
+            get_config,
+            handle_update_content
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

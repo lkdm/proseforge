@@ -7,6 +7,7 @@ import Document from "@md/interface/app/Document"
 import { ThemeProvider } from "@md/interface/providers/ThemeProvider"
 import "./App.css";
 import { listen } from '@tauri-apps/api/event';
+import debounce from 'lodash/debounce';
 
 interface Config {
   theme: 'system' | 'light' | 'dark'
@@ -18,15 +19,9 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [config, setConfig] = useState<Config | null>(null);
 
-  // async function greet() {
-  //   // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-  //   setGreetMsg(await invoke("greet", { name }));
-  // }
-
-  // async function load() {
-  //   setContent(await invoke("load"))
-  // }
-  //
+  // handle_open_dialog,
+  // get_config,
+  // handle_update_content
 
   async function getConfig() {
     try {
@@ -41,51 +36,22 @@ function App() {
     }
   }
 
-  async function load() {
-    setIsLoading(true)
-      try {
-        const result = await invoke("load");
-        setContent(result as string);
-        console.log("Content loaded:", result)
-      } catch (error) {
-        setError(JSON.stringify(error));
-        console.error("Error loading content:", error);
-      }
-      setIsLoading(false);
-    }
-
   useEffect(() => {
     console.log("Mounting app.")
     getConfig()
-    load()
   }, [])
 
   listen('file-opened', (event) => {
-    load();
+    setIsLoading(true)
+    console.log("File opened:", event.payload)
+    setContent(event.payload)
+    setIsLoading(false)
   });
 
-
-  const handleOpenDialogue = async () => {
-    try {
-      await invoke("open_file_dialogue");
-      await load();
-    } catch (error) {
-      console.error("Error opening dialogue:", error);
-    }
-  }
-
-  const handleSave = async () => {
-    try {
-      await invoke("save", { content });
-      console.log("Content saved:", content)
-    } catch (error) {
-      console.error("Error saving content:", error);
-    }
-  }
-
-  listen('file-save', () => {
-    handleSave();
-  })
+  const handleUpdate = debounce((content: string) => {
+    setContent(content);
+    invoke("handle_update_content", { content })
+  }, 1000)
 
   if (!config) return <div>Loading...</div>
 
@@ -94,7 +60,7 @@ function App() {
     <Layout>
       <Content>
           <Document>
-        {!isLoading && <Editor defaultContent={content} setContent={setContent} />}
+        {!isLoading && <Editor defaultContent={content} setContent={handleUpdate} />}
           </Document>
       </Content>
     </Layout>

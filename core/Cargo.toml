@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 rfd = "0.14.1"
 serde = { version = "1.0.208", features = ["derive"] }
+thiserror = "1.0.63"

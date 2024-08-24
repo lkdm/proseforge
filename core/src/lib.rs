@@ -1,23 +1,26 @@
 pub mod config;
+pub mod data;
 pub mod error;
-pub mod md;
 
 use config::Config;
+use data::{ContentRepository, TextFile};
 use error::NodeError;
-use md::{ContentRepository, TextFile};
-use std::sync::Arc;
+use serde::Serialize;
+use std::sync::{Arc, Mutex};
+use tokio::sync::broadcast;
 
 pub struct Node {
-    pub editor: Arc<TextFile>,
+    pub editor: Arc<Mutex<TextFile>>,
     pub config: Arc<Config>,
 }
 
 impl Node {
     pub fn new() -> Result<Node, NodeError> {
         let node = Node {
-            editor: Arc::new(TextFile::default()),
+            editor: Arc::new(Mutex::new(TextFile::default())),
             config: Arc::new(Config::default()),
         };
+
         Ok(node)
     }
 }

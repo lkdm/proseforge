@@ -9,3 +9,4 @@ edition = "2021"
 rfd = "0.14.1"
 serde = { version = "1.0.208", features = ["derive"] }
 thiserror = "1.0.63"
+tokio = "1.39.3"

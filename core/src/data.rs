@@ -1,5 +1,6 @@
 use crate::error::NodeError;
 use rfd::FileDialog;
+use serde::{Deserialize, Serialize};
 use std::{
     fs::{self, File},
     io::{self, BufReader, BufWriter, Read, Write},
@@ -48,7 +49,7 @@ pub trait ContentRepository {
     // Saves the current content to storage
     fn save(&self) -> Result<(), NodeError>;
 
-    fn new() -> Self
+    fn new(location: Option<SaveLocation>) -> Self
     where
         Self: Sized;
 
@@ -66,7 +67,7 @@ pub trait ContentRepository {
     fn get_save_location(&self) -> Option<SaveLocation>;
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct TextFile {
     path: Option<PathBuf>,
     content: String,
@@ -100,10 +101,15 @@ impl ContentRepository for TextFile {
         buf_writer.flush()?;
         Ok(())
     }
-    fn new() -> Self {
+    fn new(location: Option<SaveLocation>) -> Self {
+        let path = match location {
+            Some(SaveLocation::PathBuf(p)) => Some(p),
+            Some(SaveLocation::String(s)) => Some(PathBuf::from(s)),
+            None => None,
+        };
         TextFile {
-            path: None,
-            content: String::new(),
+            path,
+            content: String::from(""),
         }
     }
     fn update_content(&mut self, content: String) {

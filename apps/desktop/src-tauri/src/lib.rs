@@ -23,9 +23,7 @@ async fn handle_update_content(
     content: String,
     state: tauri::State<'_, Mutex<Node>>,
 ) -> Result<(), NodeError> {
-    let state = state.lock().unwrap();
-    state.editor.lock().unwrap().update_content(content);
-    println!("handle update");
+    state.lock().unwrap().handle_update_content(content)?;
     Ok(())
 }
 
@@ -46,8 +44,25 @@ async fn handle_open_dialog(
 #[tauri::command]
 async fn handle_save(state: tauri::State<'_, Mutex<Node>>) -> Result<(), NodeError> {
     let state = state.lock().unwrap();
-    state.editor.lock().unwrap().save()?;
-    Ok(())
+    let result = {
+        // Lock the editor and attempt to save
+        match state.handle_save() {
+            Ok(()) => Ok(()),
+            Err(NodeError::NoSavePath) => {
+                // Open a save location dialog
+                let path = open_file_save_dialog()?;
+
+                // Re-acquire the lock on editor to update the save location and retry saving
+                let mut editor = state.editor.lock().unwrap();
+                editor.set_save_location(path);
+
+                // Retry saving
+                editor.save()
+            }
+            Err(e) => Err(e),
+        }
+    };
+    result
 }
 
 #[tauri::command]
@@ -62,9 +77,7 @@ async fn handle_new_file(
     app: AppHandle,
     state: tauri::State<'_, Mutex<Node>>,
 ) -> Result<(), NodeError> {
-    let mut state = state.lock().unwrap();
-    let new = TextFile::new(None);
-    state.editor = Arc::new(Mutex::new(new));
+    state.lock().unwrap().handle_new_document()?;
     app.emit("file-opened", String::from("")).unwrap();
     Ok(())
 }

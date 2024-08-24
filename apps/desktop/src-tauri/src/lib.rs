@@ -52,7 +52,10 @@ async fn handle_save(state: tauri::State<'_, Mutex<Node>>) -> Result<(), NodeErr
             Ok(()) => Ok(()),
             Err(NodeError::NoSavePath) => {
                 // Open a save location dialog
-                let path = open_file_save_dialog()?;
+                let path = match open_file_save_dialog() {
+                    Ok(path) => path,
+                    Err(_) => return Ok(()), // User cancelled the dialog
+                };
 
                 // Re-acquire the lock on editor to update the save location and retry saving
                 let mut editor = state.editor.lock().unwrap();
@@ -200,6 +203,7 @@ pub fn run() {
             Ok(())
         })
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             handle_open_dialog,
             get_config,

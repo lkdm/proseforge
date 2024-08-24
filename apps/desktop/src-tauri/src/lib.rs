@@ -190,7 +190,7 @@ pub fn run() {
 
             // Create the main window
             let win_builder = WebviewWindowBuilder::new(handle, "main", WebviewUrl::default())
-                .title("Markdown Editor")
+                .title("Proseforge")
                 .inner_size(800.0, 600.0);
 
             // set transparent title bar only when building for macOS

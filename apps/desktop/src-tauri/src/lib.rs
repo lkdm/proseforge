@@ -1,6 +1,7 @@
 use md_core::config::{Config, Theme};
 use md_core::data::*;
 use md_core::error::NodeError;
+use md_core::event::CoreEvent;
 use md_core::Node;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -37,7 +38,8 @@ async fn handle_open_dialog(
     let mut txt = state.editor.lock().unwrap();
     txt.set_save_location(path);
     txt.load()?;
-    app.emit("file-opened", txt.get_content()).unwrap();
+    let evt = CoreEvent::document_load(txt.get_content());
+    app.emit("file-opened", evt).unwrap();
     Ok(())
 }
 
@@ -78,7 +80,8 @@ async fn handle_new_file(
     state: tauri::State<'_, Mutex<Node>>,
 ) -> Result<(), NodeError> {
     state.lock().unwrap().handle_new_document()?;
-    app.emit("file-opened", String::from("")).unwrap();
+    let evt = CoreEvent::document_load(String::new());
+    app.emit("file-opened", evt).unwrap();
     Ok(())
 }
 

@@ -18,6 +18,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [config, setConfig] = useState<Config | null>(null);
+  const [eventTimestamp, setEventTimestamp] = useState<number>(0);
 
   async function getConfig() {
     try {
@@ -44,8 +45,13 @@ function App() {
     async function setupListener() {
       unlistenFunction = await listen('file-opened', (event) => {
         setIsLoading(true);
-        const content = event.payload as string || '';
-        setContent(content);
+        const { content: newContent, timestamp } = event.payload.DocumentLoad as {
+            content: string;
+            timestamp: number;
+          };
+        console.log(timestamp, newContent)
+        setContent(newContent || '');
+        setEventTimestamp(timestamp);
         setIsLoading(false);
       });
     }
@@ -58,7 +64,7 @@ function App() {
         unlistenFunction();
       }
     };
-  }, []);
+  }, [eventTimestamp]);
 
   const handleUpdate = debounce((content: string) => {
     setContent(content);
@@ -66,8 +72,8 @@ function App() {
   }, 150)
 
   useEffect(() => {
-      console.log("Editor re-rendered with content:", content);
-    }, [content]);
+      console.log("Editor re-rendered with timestamp:", eventTimestamp);
+    }, [eventTimestamp]);
 
   useEffect(() => {
     console.log("isLoading changed:", isLoading);
@@ -80,10 +86,9 @@ function App() {
     <Layout>
       <Content>
           <Document>
-            {isLoading ? "True" : "False"}
         {isLoading
         ? <>Loading...</>
-        : <Editor defaultContent={content} setContent={handleUpdate} />}
+              : <Editor defaultContent={content} setContent={handleUpdate} eventTimestamp={eventTimestamp}  />}
           </Document>
       </Content>
     </Layout>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { defaultValueCtx, Editor, rootCtx } from '@milkdown/kit/core';
 import { nord } from '@milkdown/theme-nord';
 import { Milkdown, MilkdownProvider, useEditor } from '@milkdown/react';
@@ -13,10 +13,10 @@ import { commonmark } from '@milkdown/kit/preset/commonmark';
 interface EditorProps {
   defaultContent: string;
   setContent: (content: string) => void;
+  eventTimestamp?: number;
 }
 
-const MilkdownEditor = ({defaultContent, setContent}: EditorProps) => {
-
+const MilkdownEditor = ({defaultContent, setContent, eventTimestamp}: EditorProps) => {
     const { get } = useEditor((root) =>
       Editor.make()
         .config(nord)
@@ -37,13 +37,19 @@ const MilkdownEditor = ({defaultContent, setContent}: EditorProps) => {
                 );
                 setContent(markdown);
               })
+            .destroy(() => console.log("Destroyed"))
         })
         .use(commonmark)
         .use(history)
         .use(clipboard)
         .use(indent)
-        .use(listener)
+        .use(listener),
+      [eventTimestamp]
   );
+
+    useEffect(() => {
+      console.log("Milkdown re-rend")
+    }, [])
 
   return <Milkdown />;
 };

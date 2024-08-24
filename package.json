@@ -10,6 +10,7 @@
     "interface"
   ],
   "scripts": {
+    "css": "pnpm --filter @md/interface css-watch",
     "desktop": "pnpm --filter @md/desktop --",
     "interface": "pnpm --filter @md/interface --",
     "dev:desktop": "pnpm run --filter @md/desktop tauri dev",

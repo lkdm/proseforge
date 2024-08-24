@@ -128,7 +128,7 @@ pub fn run() {
             let app_submenu = SubmenuBuilder::new(handle, "Application")
                 .about(Some(
                     AboutMetadataBuilder::new()
-                        .name("Markdown Editor".into())
+                        .name("Proseforge".into())
                         .version("0.1.0".into())
                         .authors(vec!["Luke Martin".into()].into())
                         .website("https://lukm.dev/".into())

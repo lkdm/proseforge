@@ -51,7 +51,7 @@ function App() {
   const handleUpdate = debounce((content: string) => {
     setContent(content);
     invoke("handle_update_content", { content })
-  }, 1000)
+  }, 150)
 
   if (!config) return <div>Loading...</div>
 

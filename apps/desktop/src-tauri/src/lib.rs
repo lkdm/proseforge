@@ -25,6 +25,7 @@ async fn handle_update_content(
 ) -> Result<(), NodeError> {
     let state = state.lock().unwrap();
     state.editor.lock().unwrap().update_content(content);
+    println!("handle update");
     Ok(())
 }
 
@@ -54,6 +55,18 @@ async fn get_config(state: tauri::State<'_, Mutex<Node>>) -> Result<Config, Node
     let state = state.lock().map_err(|_| NodeError::BlockingError)?;
     let config = state.config.clone();
     Ok(config.as_ref().clone())
+}
+
+#[tauri::command]
+async fn handle_new_file(
+    app: AppHandle,
+    state: tauri::State<'_, Mutex<Node>>,
+) -> Result<(), NodeError> {
+    let mut state = state.lock().unwrap();
+    let new = TextFile::new(None);
+    state.editor = Arc::new(Mutex::new(new));
+    app.emit("file-opened", String::from("")).unwrap();
+    Ok(())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -91,6 +104,11 @@ pub fn run() {
 
             let file_submenu = SubmenuBuilder::new(handle, "File")
                 .item(
+                    &MenuItemBuilder::with_id("NEW", "New")
+                        .accelerator("CmdOrControl+N")
+                        .build(handle)?,
+                )
+                .item(
                     &MenuItemBuilder::with_id("OPEN", "Open")
                         .accelerator("CmdOrControl+O")
                         .build(handle)?,
@@ -120,6 +138,9 @@ pub fn run() {
             // Events
 
             handle.on_menu_event(move |handle, event| {
+                if event.id() == "NEW" {
+                    block_on(handle_new_file(handle.clone(), handle.state())).unwrap();
+                }
                 if event.id() == "OPEN" {
                     block_on(handle_open_dialog(handle.clone(), handle.state())).unwrap();
                 }

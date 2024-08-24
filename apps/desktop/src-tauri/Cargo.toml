@@ -1,5 +1,5 @@
 [package]
-name = "tauri"
+name = "desktop"
 version = "0.0.0"
 description = "A Tauri App"
 authors = ["you"]
@@ -14,9 +14,20 @@ crate-type = ["lib", "cdylib", "staticlib"]
 [build-dependencies]
 tauri-build = { version = "2.0.0-rc", features = [] }
 
+[target."cfg(target_os = \"macos\")".dependencies]
+cocoa = "0.25"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "z"
+strip = true
+
 [dependencies]
 tauri = { version = "2.0.0-rc", features = [] }
 tauri-plugin-shell = "2.0.0-rc"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-
+md_core = { path = "../../../core" }
+tokio = { version = "1", features = ["full"] }

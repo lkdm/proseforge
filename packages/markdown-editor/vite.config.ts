@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@md/interface': '/interface', // Points to the source directory
+      '@md/markdown-editor': '/packages/markdown-editor',
     },
   },
 });

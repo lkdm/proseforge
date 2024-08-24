@@ -1,5 +1,9 @@
-import React from "react";
+import { ReactNode } from "react";
 
-export const Layout = (): React.ReactElement => {
-  return <>Layout</>
-}
+const Layout: React.FC<{ children: ReactNode }> = ({ children }) => (
+  <main className="flex flex-col h-screen">
+    <div className="flex flex-1 overflow-hidden">{children}</div>
+  </main>
+);
+
+export default Layout;

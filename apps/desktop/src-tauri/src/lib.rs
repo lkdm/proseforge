@@ -6,6 +6,9 @@ use md_core::md::*;
 use md_core::Node;
 use std::sync::Arc;
 use std::sync::Mutex;
+use tauri::menu::{
+    CheckMenuItemBuilder, MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder,
+};
 use tauri::{async_runtime::block_on, Manager, TitleBarStyle, WebviewUrl, WebviewWindowBuilder};
 use tokio::task::block_in_place;
 
@@ -69,6 +72,12 @@ pub fn run() {
             app.manage(Mutex::new(node));
 
             // Tauri-specific
+            let submenu = SubmenuBuilder::new(app, "Sub")
+                .text(1, "Tauri")
+                .separator()
+                .build()?;
+            let menu = MenuBuilder::new(app).item(&submenu).build()?;
+            app.set_menu(menu)?;
 
             let win_builder = WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
                 .title("Markdown Editor")

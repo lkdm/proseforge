@@ -14,8 +14,6 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self {
-            theme: Theme::System,
-        }
+        Self { theme: Theme::Dark }
     }
 }

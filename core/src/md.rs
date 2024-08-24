@@ -1,3 +1,4 @@
+use crate::error::NodeError;
 use rfd::FileDialog;
 use std::{
     fs::{self, File},
@@ -5,45 +6,83 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use crate::error::CoreError;
-
 const DOCUMENTATION_STR: &'static str = r#"# Markdown Editor
 
 This is a simple markdown editor that allows you to create, edit, and save markdown files.
 "#;
 
-pub struct MarkdownRecord {
-    content: String,
-    id: Option<i32>,
+#[derive(Debug, Clone, PartialEq)]
+pub enum SaveLocation {
+    PathBuf(PathBuf),
+    String(String),
+}
+
+impl PartialEq<PathBuf> for SaveLocation {
+    fn eq(&self, other: &PathBuf) -> bool {
+        match self {
+            SaveLocation::PathBuf(p) => p == other,
+            SaveLocation::String(s) => PathBuf::from(s) == *other,
+        }
+    }
+}
+
+impl From<String> for SaveLocation {
+    fn from(s: String) -> SaveLocation {
+        SaveLocation::String(s)
+    }
+}
+
+impl From<PathBuf> for SaveLocation {
+    fn from(p: PathBuf) -> SaveLocation {
+        SaveLocation::PathBuf(p)
+    }
+}
+
+// ContentRepository trait
+// An interface designed to allow for the loading and saving of content across different storage types.
+// Examples: File system, API, or database
+pub trait ContentRepository {
+    // Loads data into memory
+    fn load(&mut self) -> Result<(), NodeError>;
+
+    // Saves the current content to storage
+    fn save(&self) -> Result<(), NodeError>;
+
+    fn new() -> Self
+    where
+        Self: Sized;
+
+    fn update_content(&mut self, content: String);
+
+    // Retrieve the current content
+    fn get_content(&self) -> String;
+
+    // Sets the save location or identifier for storage
+    fn set_save_location<T>(&mut self, path: T)
+    where
+        T: Into<SaveLocation>;
+
+    // Retrieves the save location or identifier for storage
+    fn get_save_location(&self) -> Option<SaveLocation>;
 }
 
 #[derive(Clone)]
-pub struct MarkdownFile {
-    content: String,
+pub struct TextFile {
     path: Option<PathBuf>,
+    content: String,
 }
 
-pub trait DataStorage {
-    // Writes the content to the file
-    fn write(&self) -> Result<(), CoreError>;
-    // Reads the content from the file
-    fn read(&mut self) -> Result<(), CoreError>;
-
-    fn content(&self) -> String;
-}
-
-impl DataStorage for MarkdownFile {
-    fn write(&self) -> Result<(), CoreError> {
-        let file = match &self.path {
-            Some(path) => File::create(path)?,
-            None => return Err(CoreError::no_save_path()),
-        };
-        let mut buf_writer = BufWriter::new(file);
-        buf_writer.write_all(self.content.as_bytes())?;
-        buf_writer.flush()?;
-        Ok(())
+impl Default for TextFile {
+    fn default() -> Self {
+        TextFile {
+            content: String::from(DOCUMENTATION_STR),
+            path: None,
+        }
     }
-    fn read(&mut self) -> Result<(), CoreError> {
+}
+
+impl ContentRepository for TextFile {
+    fn load(&mut self) -> Result<(), NodeError> {
         let file = File::open(self.path.as_ref().unwrap())?;
         let mut buf_reader = BufReader::new(file);
         let mut content = String::new();
@@ -51,52 +90,50 @@ impl DataStorage for MarkdownFile {
         self.content = content;
         Ok(())
     }
-    fn content(&self) -> String {
+    fn save(&self) -> Result<(), NodeError> {
+        let file = match &self.path {
+            Some(path) => File::create(path)?,
+            None => return Err(NodeError::NoSavePath),
+        };
+        let mut buf_writer = BufWriter::new(file);
+        buf_writer.write_all(self.content.as_bytes())?;
+        buf_writer.flush()?;
+        Ok(())
+    }
+    fn new() -> Self {
+        TextFile {
+            path: None,
+            content: String::new(),
+        }
+    }
+    fn update_content(&mut self, content: String) {
+        self.content = content;
+    }
+    fn get_content(&self) -> String {
         self.content.clone()
     }
-}
-
-impl MarkdownFile {
-    pub fn new(content: Option<String>, path: Option<PathBuf>) -> Self {
-        match content {
-            Some(content) => Self { content, path },
-            None => Self {
-                content: String::new(),
-                path,
-            },
-        }
+    fn set_save_location<T>(&mut self, path: T)
+    where
+        T: Into<SaveLocation>,
+    {
+        self.path = match path.into() {
+            SaveLocation::PathBuf(p) => Some(p),
+            SaveLocation::String(s) => Some(PathBuf::from(s)),
+        };
     }
 
-    pub fn set_content(&mut self, content: &str) {
-        self.content = content.into();
+    fn get_save_location(&self) -> Option<SaveLocation> {
+        self.path.clone().map(SaveLocation::PathBuf)
     }
 }
 
-impl From<PathBuf> for MarkdownFile {
-    fn from(path: PathBuf) -> Self {
-        MarkdownFile {
-            content: String::new(),
-            path: Some(path),
-        }
-    }
-}
-
-pub fn open_file_dialog() -> Result<PathBuf, CoreError> {
+pub fn open_file_dialog() -> Result<PathBuf, NodeError> {
     let dir = PathBuf::from("/");
     let file_dialog_res = FileDialog::new().set_directory(dir).pick_file();
     if let Some(file_handle) = file_dialog_res {
         Ok(file_handle.to_path_buf())
     } else {
-        Err(CoreError::no_open_path())
-    }
-}
-
-impl Default for MarkdownFile {
-    fn default() -> Self {
-        Self {
-            content: String::from(DOCUMENTATION_STR),
-            path: None,
-        }
+        Err(NodeError::NoOpenPath)
     }
 }
 
@@ -106,24 +143,24 @@ mod tests {
     use std::env;
 
     #[test]
-    fn test_markdown_file() {
+    fn text_textfile() {
+        let mut md = TextFile::new();
+        assert_eq!(md.get_content(), "");
+
+        md.update_content(String::from("Hello, world!"));
+        assert_eq!(md.get_content(), "Hello, world!");
+
         let path = env::temp_dir().join("test.md");
-        let markdown = MarkdownFile::new(Some(String::from("Hello, world!")), Some(path.clone()));
-        // Check if is an error
-        assert!(markdown.write().is_ok());
+        md.set_save_location(path);
+        assert_eq!(
+            md.get_save_location(),
+            Some(SaveLocation::PathBuf(env::temp_dir().join("test.md")))
+        );
+        assert!(md.save().is_ok());
 
-        // Load from reference
-        let loaded_markdown = markdown.read();
-        assert!(loaded_markdown.is_ok());
-    }
-
-    #[test]
-    fn test_markdown_file_no_path() {
-        let markdown = MarkdownFile {
-            content: String::from("Hello, world!"),
-            path: None,
-        };
-        // Ensure there is an error
-        assert!(markdown.write().is_err());
+        md.update_content(String::from("Goodbye, world!"));
+        assert_eq!(md.get_content(), "Goodbye, world!");
+        assert!(md.load().is_ok());
+        assert_eq!(md.get_content(), "Hello, world!");
     }
 }

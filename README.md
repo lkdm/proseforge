@@ -12,7 +12,7 @@ Proseforge is an open-source cross-platform markdown editor written in Rust.
 
 Proseforge uses Rust, React, Typescript, Tailwind, and Tauri.
 
-## Monorepp structure
+## Monorepo structure
 
 ### Apps:
 

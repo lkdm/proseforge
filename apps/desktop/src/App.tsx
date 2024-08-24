@@ -7,10 +7,15 @@ import Document from "@md/interface/app/Document"
 import { ThemeProvider } from "@md/interface/providers/ThemeProvider"
 import "./App.css";
 
+interface Config {
+  theme: 'system' | 'light' | 'dark'
+}
+
 function App() {
   const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [config, setConfig] = useState<Config | null>(null);
 
   // async function greet() {
   //   // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
@@ -20,6 +25,20 @@ function App() {
   // async function load() {
   //   setContent(await invoke("load"))
   // }
+  //
+
+  async function getConfig() {
+    try {
+      const config = await invoke("get_config");
+      setConfig({
+        ...config,
+        theme: config.theme.toLowerCase() as Config['theme'],
+      })
+      console.log("Config loaded:", config)
+    } catch (error) {
+      console.error("Error loading config:", error);
+    }
+  }
 
   async function load() {
     setIsLoading(true)
@@ -36,6 +55,7 @@ function App() {
 
   useEffect(() => {
     console.log("Mounting app.")
+    getConfig()
     load()
   }, [])
 
@@ -57,8 +77,10 @@ function App() {
     }
   }
 
+  if (!config) return <div>Loading...</div>
+
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+    <ThemeProvider defaultTheme={config.theme}>
     <Layout>
       <Content>
         <button onClick={handleOpenDialogue}>Load</button>

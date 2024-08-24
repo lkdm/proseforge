@@ -99,4 +99,14 @@ impl CoreError {
             detail,
         }
     }
+    pub fn blocking_error() -> Self {
+        let title = String::from("Blocking Error");
+        let message = String::from("The thread has been blocked.");
+        let detail = Some(String::from("Please check the thread for errors."));
+        Self {
+            title,
+            message,
+            detail,
+        }
+    }
 }

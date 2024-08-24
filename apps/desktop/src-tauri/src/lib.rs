@@ -1,3 +1,4 @@
+use md_core::config::{Config, Theme};
 use md_core::error::CoreError;
 use md_core::md::DataStorage;
 use md_core::md::MarkdownFile;
@@ -45,6 +46,13 @@ async fn open_file_dialogue(state: tauri::State<'_, Mutex<Node>>) -> Result<(), 
     Ok(())
 }
 
+#[tauri::command]
+async fn get_config(state: tauri::State<'_, Mutex<Node>>) -> Result<Config, CoreError> {
+    let state = state.lock().map_err(|_| CoreError::blocking_error())?;
+    let config = state.config.clone();
+    Ok(config.as_ref().clone())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -57,11 +65,13 @@ pub fn run() {
                     std::process::exit(1);
                 }
             };
+            let config = node.config.clone();
             app.manage(Mutex::new(node));
+
             // Tauri-specific
 
             let win_builder = WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
-                .title("Transparent Titlebar Window")
+                .title("Markdown Editor")
                 .inner_size(800.0, 600.0);
 
             // set transparent title bar only when building for macOS
@@ -78,14 +88,16 @@ pub fn run() {
 
                 let ns_window = window.ns_window().unwrap() as id;
                 unsafe {
-                    let bg_color = NSColor::colorWithRed_green_blue_alpha_(
-                        nil,
-                        50.0 / 255.0,
-                        158.0 / 255.0,
-                        163.5 / 255.0,
-                        1.0,
-                    );
-                    ns_window.setBackgroundColor_(bg_color);
+                    let bg_colour = match config.theme {
+                        Theme::Light => NSColor::colorWithRed_green_blue_alpha_(
+                            nil, 0.9294, 0.9294, 0.9098, 1.0,
+                        ),
+                        Theme::Dark => NSColor::colorWithRed_green_blue_alpha_(
+                            nil, 0.1529, 0.1451, 0.1529, 1.0,
+                        ),
+                        _ => NSColor::colorWithRed_green_blue_alpha_(nil, 1.0, 1.0, 1.0, 1.0),
+                    };
+                    ns_window.setBackgroundColor_(bg_colour);
                 }
             }
 
@@ -96,7 +108,8 @@ pub fn run() {
             greet,
             load,
             save,
-            open_file_dialogue
+            open_file_dialogue,
+            get_config
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

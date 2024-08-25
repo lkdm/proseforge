@@ -7,6 +7,7 @@ name = "Proseforge"
 version = "0.0.0"
 dependencies = [
  "cocoa 0.25.0",
+ "fs",
  "md_core",
  "serde",
  "serde_json",
@@ -1143,6 +1144,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "fs"
+version = "0.1.0"
+dependencies = [
+ "rfd",
+]
+
+[[package]]
 name = "futf"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2048,7 +2056,6 @@ name = "md_core"
 version = "0.1.0"
 dependencies = [
  "chrono",
- "rfd",
  "serde",
  "thiserror",
  "tokio",

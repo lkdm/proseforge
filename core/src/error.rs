@@ -36,6 +36,8 @@ pub enum NodeError {
     },
     #[error("Unsaved Changes: The file has unsaved changes.")]
     FileNotSaved,
+    #[error("Locking Error: The mutex could not be locked.")]
+    LockError,
 }
 
 impl serde::Serialize for NodeError {

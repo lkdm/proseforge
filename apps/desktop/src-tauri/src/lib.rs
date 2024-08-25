@@ -1,3 +1,6 @@
+use fs::{
+    request_ignore_unsaved_changes_dialog, request_open_path_dialog, request_save_path_dialog,
+};
 use md_core::config::{Config, Theme};
 use md_core::data::*;
 use md_core::error::NodeError;
@@ -34,13 +37,32 @@ async fn handle_open_dialog(
     app: AppHandle,
     state: tauri::State<'_, Mutex<Node>>,
 ) -> Result<(), NodeError> {
-    let path = open_file_dialog()?;
     let state = state.lock().unwrap();
-    let mut txt = state.editor.lock().unwrap();
-    txt.set_save_location(path);
-    txt.load()?;
-    let evt = CoreEvent::document_load(txt.get_content());
+    if state.editor.lock().unwrap().has_unsaved_changes() {
+        if !request_ignore_unsaved_changes_dialog() {
+            return Ok(());
+        }
+    }
+    let path = match request_open_path_dialog(None) {
+        Some(path) => path,
+        None => return Ok(()),
+    };
+    let document = DocumentBuilder::new()
+        .with_path(path.clone())
+        .load()?
+        .commit(&state.editor)?;
+    let content = document.get_content();
+
+    let evt = CoreEvent::document_load(content.into());
     app.emit("file-opened", evt).unwrap();
+
+    // let path = open_file_dialog()?;
+    // let state = state.lock().unwrap();
+    // let mut txt = state.editor.lock().unwrap();
+    // txt.set_save_location(path);
+    // txt.load()?;
+    //
+    //
     Ok(())
 }
 
@@ -53,14 +75,14 @@ async fn handle_save(state: tauri::State<'_, Mutex<Node>>) -> Result<(), NodeErr
             Ok(()) => Ok(()),
             Err(NodeError::NoSavePath) => {
                 // Open a save location dialog
-                let path = match open_file_save_dialog() {
-                    Ok(path) => path,
-                    Err(_) => return Ok(()), // User cancelled the dialog
+                let path = match request_save_path_dialog(None) {
+                    Some(path) => path,
+                    None => return Ok(()),
                 };
 
                 // Re-acquire the lock on editor to update the save location and retry saving
                 let mut editor = state.editor.lock().unwrap();
-                editor.set_save_location(path);
+                editor.set_save_location(path.into());
 
                 // Retry saving
                 editor.save()
@@ -90,7 +112,7 @@ async fn handle_new_file(
     match state.handle_new_document(false) {
         Ok(_) => {}
         Err(NodeError::FileNotSaved) => {
-            let force = open_save_warning_dialog();
+            let force = request_ignore_unsaved_changes_dialog();
             if force {
                 state.handle_new_document(true)?;
             } else {

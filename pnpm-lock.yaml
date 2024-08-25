@@ -33,6 +33,9 @@ importers:
       '@tauri-apps/plugin-shell':
         specifier: '>=2.0.0-rc.0'
         version: 2.0.0-rc.0
+      '@types/lodash':
+        specifier: ^4.17.7
+        version: 4.17.7
       lodash:
         specifier: ^4.17.21
         version: 4.17.21

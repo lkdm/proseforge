@@ -4,21 +4,25 @@ pub mod event;
 pub mod node;
 use tokio::sync::broadcast::{channel, Sender};
 
-use data::DocumentFile;
+use data::{DataStore, Document, FileStore};
 use error::NodeError;
 use node::config::*;
-use std::sync::{Arc, Mutex};
+use std::{
+    path::PathBuf,
+    sync::{Arc, Mutex},
+};
 
 pub struct Node {
-    pub editor: Arc<Mutex<DocumentFile>>,
-    // pub config: Arc<NodeConfig>,
+    pub data_store: Arc<DataStore>,
+    pub document: Arc<Document>,
 }
 
 impl Node {
     pub fn new() -> Result<Node, NodeError> {
+        let path = PathBuf::default(); // TODO: Get the path from the config
         let node = Node {
-            editor: Arc::new(Mutex::new(DocumentFile::new())),
-            // config: Arc::new(NodeConfig::default()),
+            data_store: Arc::new(FileStore::new()),
+            document: Arc::new(Document::new()),
         };
 
         Ok(node)

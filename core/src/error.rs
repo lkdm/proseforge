@@ -38,6 +38,16 @@ pub enum NodeError {
     FileNotSaved,
     #[error("Locking Error: The mutex could not be locked.")]
     LockError,
+    #[error("Document Not Found: The document could not be found.")]
+    DocumentNotFound,
+    #[error("Document Error: {message}")]
+    DocumentError {
+        message: String,
+        #[source]
+        source: Option<Box<dyn std::error::Error>>,
+    },
+    #[error("Config Error")]
+    ConfigError,
 }
 
 impl serde::Serialize for NodeError {

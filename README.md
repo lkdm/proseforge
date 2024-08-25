@@ -36,3 +36,4 @@ Proseforge uses Rust, React, Typescript, Tailwind, and Tauri.
 - `make install` - Install dependencies
 - `pnpm dev:desktop` - Start the desktop app
 - `pnpm css` - Compile CSS and watch for changes
+- `pnpm run desktop tauri build` - Build the desktop app

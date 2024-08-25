@@ -1,4 +1,4 @@
-import React, { ReactNode, useRef } from "react";
+import React, { ReactNode } from "react";
 import useFocusEditor from "../hooks/useFocusEditor";
 
 const Document: React.FC<{ children: ReactNode }> = ({ children }) => {

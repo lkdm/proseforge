@@ -1,24 +1,25 @@
-pub mod config;
 pub mod data;
 pub mod error;
 pub mod event;
+pub mod node;
+pub mod persist;
 use tokio::sync::broadcast::{channel, Sender};
 
-use config::Config;
 use data::{Document, UserContent};
 use error::NodeError;
+use node::config::*;
 use std::sync::{Arc, Mutex};
 
 pub struct Node {
     pub editor: Arc<Mutex<Document>>,
-    pub config: Arc<Config>,
+    pub config: Arc<NodeConfig>,
 }
 
 impl Node {
     pub fn new() -> Result<Node, NodeError> {
         let node = Node {
             editor: Arc::new(Mutex::new(Document::new())),
-            config: Arc::new(Config::default()),
+            config: Arc::new(NodeConfig::default()),
         };
 
         Ok(node)

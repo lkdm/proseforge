@@ -1,10 +1,10 @@
 use fs::{
     request_ignore_unsaved_changes_dialog, request_open_path_dialog, request_save_path_dialog,
 };
-use md_core::config::{Config, Theme};
 use md_core::data::*;
 use md_core::error::NodeError;
 use md_core::event::CoreEvent;
+use md_core::node::config::{Theme, UserPreferences};
 use md_core::Node;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -94,10 +94,10 @@ async fn handle_save(state: tauri::State<'_, Mutex<Node>>) -> Result<(), NodeErr
 }
 
 #[tauri::command]
-async fn get_config(state: tauri::State<'_, Mutex<Node>>) -> Result<Config, NodeError> {
+async fn get_config(state: tauri::State<'_, Mutex<Node>>) -> Result<UserPreferences, NodeError> {
     let state = state.lock().map_err(|_| NodeError::BlockingError)?;
     let config = state.config.clone();
-    Ok(config.as_ref().clone())
+    Ok(config.as_ref().clone().preferences)
 }
 
 #[tauri::command]
@@ -229,7 +229,7 @@ pub fn run() {
 
                 let ns_window = window.ns_window().unwrap() as id;
                 unsafe {
-                    let bg_colour = match config.theme {
+                    let bg_colour = match config.preferences.theme {
                         Theme::Light => NSColor::colorWithRed_green_blue_alpha_(
                             nil, 0.9294, 0.9294, 0.9098, 1.0,
                         ),

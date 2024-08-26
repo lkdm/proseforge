@@ -1,8 +1,7 @@
-use md_core::config::{Config, Theme};
-use md_core::data::*;
-use md_core::error::NodeError;
-use md_core::event::CoreEvent;
-use md_core::Node;
+use md_core::domain::editor::models::UpdateDocumentRequest;
+use md_core::domain::editor::ports::InMemoryDocumentRepository;
+use md_core::NodeError;
+use md_core::TauriNode;
 use md_fs::{
     request_ignore_unsaved_changes_dialog, request_open_path_dialog, request_save_path_dialog,
 };
@@ -26,16 +25,26 @@ struct Payload {
 #[tauri::command]
 async fn handle_update_content(
     content: String,
-    state: tauri::State<'_, Mutex<Node>>,
+    state: tauri::State<'_, Mutex<TauriNode>>,
 ) -> Result<(), NodeError> {
-    state.lock().unwrap().handle_update_content(content)?;
+    // Lock the state safely
+    let ds;
+    {
+        let state = state.lock().unwrap();
+        ds = state.document_ds.clone();
+    }
+
+    let req = UpdateDocumentRequest::new(content.into());
+    ds.update_content(&req)
+        .await
+        .map_err(|_| NodeError::RepositoryError)?;
     Ok(())
 }
 
 #[tauri::command]
 async fn handle_open_dialog(
     app: AppHandle,
-    state: tauri::State<'_, Mutex<Node>>,
+    state: tauri::State<'_, Mutex<TauriNode>>,
 ) -> Result<(), NodeError> {
     let state = state.lock().unwrap();
     if state.editor.lock().unwrap().has_unsaved_changes() {
@@ -60,7 +69,7 @@ async fn handle_open_dialog(
 }
 
 #[tauri::command]
-async fn handle_save(state: tauri::State<'_, Mutex<Node>>) -> Result<(), NodeError> {
+async fn handle_save(state: tauri::State<'_, Mutex<TauriNode>>) -> Result<(), NodeError> {
     let state = state.lock().unwrap();
     let result = {
         // Lock the editor and attempt to save
@@ -87,7 +96,7 @@ async fn handle_save(state: tauri::State<'_, Mutex<Node>>) -> Result<(), NodeErr
 }
 
 #[tauri::command]
-async fn get_config(state: tauri::State<'_, Mutex<Node>>) -> Result<Config, NodeError> {
+async fn get_config(state: tauri::State<'_, Mutex<TauriNode>>) -> Result<Config, NodeError> {
     let state = state.lock().map_err(|_| NodeError::BlockingError)?;
     let config = state.config.clone();
     Ok(config.as_ref().clone())
@@ -96,7 +105,7 @@ async fn get_config(state: tauri::State<'_, Mutex<Node>>) -> Result<Config, Node
 #[tauri::command]
 async fn handle_new_file(
     app: AppHandle,
-    state: tauri::State<'_, Mutex<Node>>,
+    state: tauri::State<'_, Mutex<TauriNode>>,
 ) -> Result<(), NodeError> {
     // Check if the current document has unsaved changes
     // TODO: build dialogue for unsaved changes
@@ -129,15 +138,14 @@ pub fn run() {
             let handle = app.handle();
 
             // Create a new Node instance
-            let node = match Node::new() {
+            let node = match TauriNode::new() {
                 Ok(node) => node,
                 Err(e) => {
                     eprintln!("Error creating Node instance: {:?}", e);
                     std::process::exit(1);
                 }
             };
-            let config = node.config.clone();
-            // handle.manage(Mutex::new(node));
+            // let config = node.config.clone();
             handle.manage(node.clone());
 
             // Tauri-specific

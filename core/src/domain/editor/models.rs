@@ -10,15 +10,15 @@ use crate::data::Timestamp;
 )]
 pub struct Content(String);
 
-impl Into<String> for Content {
-    fn into(self) -> String {
-        self.0
+impl From<&str> for Content {
+    fn from(s: &str) -> Self {
+        Content(s.to_string())
     }
 }
 
-impl Into<Content> for String {
-    fn into(self) -> Content {
-        Content(self)
+impl From<String> for Content {
+    fn from(s: String) -> Self {
+        Content(s)
     }
 }
 

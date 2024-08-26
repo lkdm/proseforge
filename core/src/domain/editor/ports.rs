@@ -5,6 +5,7 @@ use super::models::{
     UpdateDocumentError, UpdateDocumentRequest,
 };
 
+/// The document repository persists the document to a data store.
 pub trait DocumentRepository: Clone + Send + Sync + 'static {
     fn create_document(
         &self,
@@ -18,4 +19,16 @@ pub trait DocumentRepository: Clone + Send + Sync + 'static {
         &self,
         req: &UpdateDocumentRequest,
     ) -> impl Future<Output = Result<(), UpdateDocumentError>> + Send;
+}
+
+pub trait InMemoryDocumentRepository: Clone + Send + Sync + 'static {
+    fn update_content(
+        &self,
+        req: &UpdateDocumentRequest,
+    ) -> impl Future<Output = Result<(), UpdateDocumentError>> + Send;
+
+    fn get_content(
+        &self,
+        req: &GetDocumentRequest,
+    ) -> impl Future<Output = Result<Document, GetDocumentError>> + Send;
 }

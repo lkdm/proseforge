@@ -1,3 +1,5 @@
+use std::future::Future;
+
 use derive_more::derive::{AsRef, Constructor, Deref, Display, From, FromStr};
 use thiserror::Error;
 
@@ -31,6 +33,13 @@ pub struct Document {
 impl Document {
     pub fn builder() -> DocumentBuilder {
         DocumentBuilder::new()
+    }
+    fn set_modified(&mut self) {
+        self.modified_at = Some(Timestamp::default());
+    }
+    pub fn set_content(&mut self, content: Content) {
+        self.content = content.into();
+        self.set_modified();
     }
 }
 

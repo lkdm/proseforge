@@ -3,25 +3,24 @@ mod domain;
 mod outbound;
 use crate::domain::editor::models::Document;
 use domain::editor::ports::DocumentRepository;
-use outbound::file_system::FileSystem;
+use outbound::{data_store::DataStore, file_system::FileSystem};
 use std::sync::{Arc, Mutex};
-
-pub struct Node {
-    document: Arc<Document>,
-}
 
 #[derive(Debug, Clone)]
 /// The application state available to all request handlers.
-struct AppState<DR: DocumentRepository> {
+struct Node<DR: DocumentRepository> {
     document_repo: Arc<DR>,
 }
 
-impl Node {
-    pub fn new() -> Result<Node, NodeError> {
+impl Node<FileSystem> {
+    pub fn new() -> Result<Node<FileSystem>, NodeError> {
+        let file_system = FileSystem::new();
         let node = Node {
-            document: Arc::new(Document::default()),
+            document_repo: Arc::new(file_system),
         };
 
         Ok(node)
     }
 }
+
+pub enum NodeError {}

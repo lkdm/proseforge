@@ -30,5 +30,6 @@ tauri-plugin-shell = "2.0.0-rc"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 md_core = { path = "../../../core" }
+md_fs = { path = "../../../crates/fs" }
 tokio = { version = "1", features = ["full"] }
 tauri-plugin-dialog = "2.0.0-rc"

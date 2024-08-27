@@ -1,6 +1,7 @@
 pub mod config;
 mod data;
 pub mod editor;
+pub mod project;
 use editor::ports::DocumentRepository;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;

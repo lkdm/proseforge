@@ -1,7 +1,8 @@
-use rusty_ulid::Ulid;
 use chrono::{DateTime, Utc};
 use derive_more::derive::{AsRef, Deref, Display};
+use rusty_ulid::Ulid;
 use serde::Deserialize;
+use std::fmt;
 
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, AsRef, Deref, Display, Deserialize,
@@ -12,8 +13,7 @@ impl Default for Timestamp {
     fn default() -> Self {
         Self(Utc::now())
     }
-};
-
+}
 
 /// Ulid is a 128-bit Universally Unique Lexicographically Sortable Identifier
 /// https://github.com/ulid/spec
@@ -25,21 +25,16 @@ pub trait ResourceIdentifier {
     fn ulid(&self) -> Ulid;
     fn datetime(&self) -> DateTime<Utc>;
 }
-
 #[macro_export]
 macro_rules! create_resource_identifier {
     ($name:ident) => {
-        use crate::data::Identifier;
-        use crate::data::ResourceIdentifier;
-        use rusty_ulid::generate_ulid_bytes;
-        use rusty_ulid::Ulid;
-        use chrono::{DateTime, Utc};
-        use std::fmt;
-
-        #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Deserialize)]
+        #[derive(
+            Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Deserialize, Copy,
+        )]
         pub struct $name(Identifier);
         impl ResourceIdentifier for $name {
-            fn new () -> Self {
+            fn new() -> Self {
+                use rusty_ulid::generate_ulid_bytes;
                 Self(generate_ulid_bytes())
             }
 
@@ -53,8 +48,23 @@ macro_rules! create_resource_identifier {
         }
         impl fmt::Display for $name {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                // remove "id" from the end of the name
+                let name_str = stringify!($name);
+                let trimmed_name = if name_str.ends_with("Id") {
+                    &name_str[..name_str.len() - 2] // Remove "Id"
+                } else {
+                    name_str
+                };
                 write!(f, "{}_{}", stringify!($name).to_lowercase(), self.ulid())
             }
         }
     };
-};
+}
+// Create resource identifiers for the following resources:
+create_resource_identifier!(DocumentId);
+create_resource_identifier!(ProjectId);
+create_resource_identifier!(ChapterId);
+create_resource_identifier!(PartId);
+create_resource_identifier!(DraftId);
+create_resource_identifier!(NoteId);
+create_resource_identifier!(SceneId);

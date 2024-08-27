@@ -1,11 +1,11 @@
-use crate::create_resource_identifier;
+use std::path::PathBuf;
+
+use crate::data::{DirectoryId, DocumentId, ProjectId};
 use derive_more::derive::{AsRef, Constructor, Deref, Display, From, FromStr};
 use serde::Deserialize;
 use thiserror::Error;
 
 use crate::data::Timestamp;
-
-create_resource_identifier!(DocumentId);
 
 #[derive(
     Debug,
@@ -40,7 +40,6 @@ impl From<String> for Content {
 pub struct Document {
     // title: Title,
     id: DocumentId,
-    path: PathBuf,
     content: Content,
     saved_at: Option<Timestamp>,
     modified_at: Option<Timestamp>,

@@ -1,20 +1,11 @@
-use std::future::Future;
-
+use crate::create_resource_identifier;
 use derive_more::derive::{AsRef, Constructor, Deref, Display, From, FromStr};
 use serde::Deserialize;
 use thiserror::Error;
 
 use crate::data::Timestamp;
-use uuid::Uuid;
 
-#[derive(Debug, Error, Clone, PartialEq, Eq, Display, Copy, Ord, PartialOrd, Hash, Deserialize)]
-pub struct DocumentId(Uuid);
-
-impl Default for DocumentId {
-    fn default() -> Self {
-        DocumentId(Uuid::new_v4())
-    }
-}
+create_resource_identifier!(DocumentId);
 
 #[derive(
     Debug,
@@ -49,6 +40,7 @@ impl From<String> for Content {
 pub struct Document {
     // title: Title,
     id: DocumentId,
+    path: PathBuf,
     content: Content,
     saved_at: Option<Timestamp>,
     modified_at: Option<Timestamp>,

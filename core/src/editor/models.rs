@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::data::{DirectoryId, DocumentId, ProjectId};
+use crate::data::DocumentId;
 use derive_more::derive::{AsRef, Constructor, Deref, Display, From, FromStr};
 use serde::Deserialize;
 use thiserror::Error;

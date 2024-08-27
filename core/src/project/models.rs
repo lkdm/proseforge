@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use strum_macros::EnumString;
 
-use crate::data::{ChapterId, DocumentId, DraftId, NoteId, PartId, ProjectId};
+use crate::data::{ChapterId, DocumentId, DraftId, NoteId, PartId, ProjectId, SceneId};
 
 pub struct Title(String);
 
@@ -38,12 +38,6 @@ pub struct Chapter {
     id: ChapterId,
     title: Title,
     components: Vec<ChapterComponent>,
-    note: Option<NoteId>,
-}
-
-pub struct Scene {
-    id: SceneId,
-    title: Title,
     note: Option<NoteId>,
 }
 

@@ -24,6 +24,7 @@ pub trait ResourceIdentifier {
     fn new() -> Self;
     fn ulid(&self) -> Ulid;
     fn datetime(&self) -> DateTime<Utc>;
+    fn kind(&self) -> String;
 }
 #[macro_export]
 macro_rules! create_resource_identifier {
@@ -45,17 +46,44 @@ macro_rules! create_resource_identifier {
             fn datetime(&self) -> DateTime<Utc> {
                 self.ulid().datetime()
             }
+
+            fn kind(&self) -> String {
+                let name = stringify!($name).to_lowercase();
+                name[..name.len() - 2].into()
+            }
         }
         impl fmt::Display for $name {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                // remove "id" from the end of the name
                 let name_str = stringify!($name);
-                let trimmed_name = if name_str.ends_with("Id") {
-                    &name_str[..name_str.len() - 2] // Remove "Id"
-                } else {
-                    name_str
-                };
-                write!(f, "{}_{}", stringify!($name).to_lowercase(), self.ulid())
+                // remove "id" from the end of the name
+                let trimmed_name = &name_str[..name_str.len() - 2];
+                write!(f, "{}_{}", trimmed_name.to_lowercase(), self.ulid())
+            }
+        }
+        impl From<&str> for $name {
+            fn from(s: &str) -> Self {
+                // Split the string to separate the prefix and the ULID
+                let parts: Vec<&str> = s.split('_').collect();
+                if parts.len() != 2 {
+                    panic!("Invalid format: {}", s);
+                }
+
+                // Ensure the prefix matches the expected identifier name
+                let prefix = stringify!($name).to_lowercase();
+                let prefix = &prefix[..prefix.len() - 2];
+
+                if parts[0] != prefix {
+                    panic!("Expected prefix '{}', found '{}'", prefix, parts[0]);
+                }
+
+                // Parse the ULID from the second part
+                let ulid_str = parts[1];
+                let ulid: Ulid = (ulid_str)
+                    .parse()
+                    .expect(&format!("Invalid ULID: {}", ulid_str));
+
+                // Create a new instance of the ID struct
+                $name(Identifier::from(ulid))
             }
         }
     };
@@ -68,3 +96,31 @@ create_resource_identifier!(PartId);
 create_resource_identifier!(DraftId);
 create_resource_identifier!(NoteId);
 create_resource_identifier!(SceneId);
+
+mod test {
+    use super::*;
+    #[test]
+    fn test_resource_identifier() {
+        let id = DocumentId::new();
+        println!("{}", id);
+        assert_eq!(id.ulid().to_string().len(), 26);
+
+        // Ensure name is no id in the name
+        let id_str = id.to_string();
+        assert!(
+            !id_str.contains("id"),
+            "Identifier string should not contain 'id'"
+        );
+        assert!(
+            id_str.starts_with("document_"),
+            "Identifier string should start with 'document_'"
+        );
+
+        // Ensure the ID can be parsed back into a DocumentId
+        let parsed_id: DocumentId = id_str.as_str().into();
+        assert_eq!(id, parsed_id);
+
+        // Ensure the kind is correct
+        assert_eq!(id.kind(), "document");
+    }
+}

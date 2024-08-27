@@ -1,5 +1,9 @@
-use pf_core::editor::models::UpdateDocumentRequest;
-use pf_core::{Node, NodeError};
+use pf_core::config::{Config, Theme};
+use pf_core::editor::models::{
+    Content, CreateDocumentRequest, Document, DocumentId, UpdateDocumentRequest,
+};
+use pf_core::editor::ports::DocumentRepository;
+use pf_core::{config, Node, NodeError};
 use pf_file_system::FileSystem;
 use std::sync::Mutex;
 use tauri::menu::{AboutMetadataBuilder, MenuBuilder, MenuItemBuilder, SubmenuBuilder};
@@ -15,113 +19,160 @@ struct Payload {
 }
 
 #[tauri::command]
-async fn handle_update_content(
-    content: String,
+async fn handle_new_document(
+    app: AppHandle,
+    state: tauri::State<'_, Mutex<AppState>>,
+) -> Result<(), NodeError> {
+    unimplemented!()
+}
+
+#[tauri::command]
+async fn handle_open_document(
+    app: AppHandle,
+    state: tauri::State<'_, Mutex<AppState>>,
+) -> Result<Document, NodeError> {
+    unimplemented!()
+}
+
+#[tauri::command]
+async fn handle_save_document(
+    id: Option<DocumentId>,
+    content: Content,
+    app: AppHandle,
     state: tauri::State<'_, Mutex<AppState>>,
 ) -> Result<(), NodeError> {
     // Lock the state safely
     let ds;
     {
         let state = state.lock().unwrap();
-        ds = state.document_ds.clone();
+        ds = state.document_repo.clone();
     }
-
-    let req = UpdateDocumentRequest::new(content.into());
-    ds.update_content(&req)
-        .await
-        .map_err(|_| NodeError::RepositoryError)?;
+    if let Some(id) = id {
+        let request = UpdateDocumentRequest::new(id, content);
+        ds.update_document(&request);
+    } else {
+        let request = CreateDocumentRequest::new(content);
+        ds.create_document(&request);
+    }
     Ok(())
 }
 
 #[tauri::command]
-async fn handle_open_dialog(
-    app: AppHandle,
+async fn handle_update_content(
+    content: String,
     state: tauri::State<'_, Mutex<AppState>>,
 ) -> Result<(), NodeError> {
-    let state = state.lock().unwrap();
-    if state.editor.lock().unwrap().has_unsaved_changes() {
-        if !request_ignore_unsaved_changes_dialog() {
-            return Ok(());
-        }
-    }
-    let path = match request_open_path_dialog(None) {
-        Some(path) => path,
-        None => return Ok(()),
-    };
-    let document = DocumentBuilder::new()
-        .with_path(path.clone())
-        .load()?
-        .commit(&state.editor)?;
-    let content = document.get_content();
-
-    let evt = CoreEvent::document_load(content.into());
-    app.emit("file-opened", evt).unwrap();
-
-    Ok(())
+    unimplemented!()
 }
 
-#[tauri::command]
-async fn handle_save(state: tauri::State<'_, Mutex<AppState>>) -> Result<(), NodeError> {
-    let state = state.lock().unwrap();
-    let result = {
-        // Lock the editor and attempt to save
-        match state.handle_save() {
-            Ok(()) => Ok(()),
-            Err(NodeError::NoSavePath) => {
-                // Open a save location dialog
-                let path = match request_save_path_dialog(None) {
-                    Some(path) => path,
-                    None => return Ok(()),
-                };
+// #[tauri::command]
+// async fn handle_update_content(
+//     content: String,
+//     state: tauri::State<'_, Mutex<AppState>>,
+// ) -> Result<(), NodeError> {
+//     // Lock the state safely
+//     let ds;
+//     {
+//         let state = state.lock().unwrap();
+//         ds = state.document_ds.clone();
+//     }
 
-                // Re-acquire the lock on editor to update the save location and retry saving
-                let mut editor = state.editor.lock().unwrap();
-                editor.set_save_location(path.into());
+//     let req = UpdateDocumentRequest::new(content.into());
+//     ds.update_content(&req)
+//         .await
+//         .map_err(|_| NodeError::RepositoryError)?;
+//     Ok(())
+// }
 
-                // Retry saving
-                editor.save()
-            }
-            Err(e) => Err(e),
-        }
-    };
-    result
-}
+// #[tauri::command]
+// async fn handle_open_dialog(
+//     app: AppHandle,
+//     state: tauri::State<'_, Mutex<AppState>>,
+// ) -> Result<(), NodeError> {
+//     let state = state.lock().unwrap();
+//     if state.editor.lock().unwrap().has_unsaved_changes() {
+//         if !request_ignore_unsaved_changes_dialog() {
+//             return Ok(());
+//         }
+//     }
+//     let path = match request_open_path_dialog(None) {
+//         Some(path) => path,
+//         None => return Ok(()),
+//     };
+//     let document = DocumentBuilder::new()
+//         .with_path(path.clone())
+//         .load()?
+//         .commit(&state.editor)?;
+//     let content = document.get_content();
 
-#[tauri::command]
-async fn get_config(state: tauri::State<'_, Mutex<TauriNode>>) -> Result<Config, NodeError> {
-    let state = state.lock().map_err(|_| NodeError::BlockingError)?;
-    let config = state.config.clone();
-    Ok(config.as_ref().clone())
-}
+//     let evt = CoreEvent::document_load(content.into());
+//     app.emit("file-opened", evt).unwrap();
 
-#[tauri::command]
-async fn handle_new_file(
-    app: AppHandle,
-    state: tauri::State<'_, Mutex<TauriNode>>,
-) -> Result<(), NodeError> {
-    // Check if the current document has unsaved changes
-    // TODO: build dialogue for unsaved changes
+//     Ok(())
+// }
 
-    let state = state.lock().unwrap();
-    match state.handle_new_document(false) {
-        Ok(_) => {}
-        Err(NodeError::FileNotSaved) => {
-            let force = request_ignore_unsaved_changes_dialog();
-            if force {
-                state.handle_new_document(true)?;
-            } else {
-                return Ok(()); // User cancelled the dialog
-            }
-        }
-        Err(e) => {
-            eprintln!("Error creating new document: {:?}", e);
-            return Err(e);
-        }
-    }
-    let evt = CoreEvent::document_load(String::new());
-    app.emit("file-opened", evt).unwrap();
-    Ok(())
-}
+// #[tauri::command]
+// async fn handle_save(state: tauri::State<'_, Mutex<AppState>>) -> Result<(), NodeError> {
+//     let state = state.lock().unwrap();
+//     let result = {
+//         // Lock the editor and attempt to save
+//         match state.handle_save() {
+//             Ok(()) => Ok(()),
+//             Err(NodeError::NoSavePath) => {
+//                 // Open a save location dialog
+//                 let path = match request_save_path_dialog(None) {
+//                     Some(path) => path,
+//                     None => return Ok(()),
+//                 };
+
+//                 // Re-acquire the lock on editor to update the save location and retry saving
+//                 let mut editor = state.editor.lock().unwrap();
+//                 editor.set_save_location(path.into());
+
+//                 // Retry saving
+//                 editor.save()
+//             }
+//             Err(e) => Err(e),
+//         }
+//     };
+//     result
+// }
+
+// #[tauri::command]
+// async fn get_config(state: tauri::State<'_, Mutex<TauriNode>>) -> Result<Config, NodeError> {
+//     let state = state.lock().map_err(|_| NodeError::BlockingError)?;
+//     let config = state.config.clone();
+//     Ok(config.as_ref().clone())
+// }
+
+// #[tauri::command]
+// async fn handle_new_file(
+//     app: AppHandle,
+//     state: tauri::State<'_, Mutex<TauriNode>>,
+// ) -> Result<(), NodeError> {
+//     // Check if the current document has unsaved changes
+//     // TODO: build dialogue for unsaved changes
+
+//     let state = state.lock().unwrap();
+//     match state.handle_new_document(false) {
+//         Ok(_) => {}
+//         Err(NodeError::FileNotSaved) => {
+//             let force = request_ignore_unsaved_changes_dialog();
+//             if force {
+//                 state.handle_new_document(true)?;
+//             } else {
+//                 return Ok(()); // User cancelled the dialog
+//             }
+//         }
+//         Err(e) => {
+//             eprintln!("Error creating new document: {:?}", e);
+//             return Err(e);
+//         }
+//     }
+//     let evt = CoreEvent::document_load(String::new());
+//     app.emit("file-opened", evt).unwrap();
+//     Ok(())
+// }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -130,14 +181,14 @@ pub fn run() {
             let handle = app.handle();
 
             // Create a new Node instance
-            let node = match TauriNode::new() {
+            let node = match AppState::new() {
                 Ok(node) => node,
                 Err(e) => {
                     eprintln!("Error creating Node instance: {:?}", e);
                     std::process::exit(1);
                 }
             };
-            // let config = node.config.clone();
+            let config = Config::new();
             handle.manage(node.clone());
 
             // Tauri-specific
@@ -194,13 +245,14 @@ pub fn run() {
 
             handle.on_menu_event(move |handle, event| {
                 if event.id() == "NEW" {
-                    block_on(handle_new_file(handle.clone(), handle.state())).unwrap();
+                    block_on(handle_new_document(handle.clone(), handle.state())).unwrap();
                 }
                 if event.id() == "OPEN" {
-                    block_on(handle_open_dialog(handle.clone(), handle.state())).unwrap();
+                    block_on(handle_open_document(handle.clone(), handle.state())).unwrap();
                 }
                 if event.id() == "SAVE" {
-                    block_on(handle_save(handle.state())).unwrap();
+                    todo!("Got to get content from memory here.")
+                    // block_on(handle_save_document(handle.state())).unwrap();
                 }
             });
 
@@ -241,9 +293,9 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
-            handle_open_dialog,
-            get_config,
-            handle_update_content
+            handle_open_document,
+            handle_save_document,
+            handle_update_content,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -1,19 +1,23 @@
 pub mod dialogs;
-
-use std::path::{Path, PathBuf};
-use thiserror::Error;
-
+mod store;
+use crate::store::InMemoryPathStore;
+use dialogs::request_save_path_dialog;
 use pf_core::editor::{
     models::{
-        CreateDocumentError, CreateDocumentRequest, Document, GetDocumentError, GetDocumentRequest,
-        UpdateDocumentError, UpdateDocumentRequest,
+        CreateDocumentError, CreateDocumentRequest, Document, DocumentId, GetDocumentError,
+        GetDocumentRequest, UpdateDocumentError, UpdateDocumentRequest,
     },
     ports::DocumentRepository,
 };
+use std::{
+    collections::BTreeMap,
+    path::{Path, PathBuf},
+};
+use thiserror::Error;
 
 #[derive(Debug, Clone)]
 pub struct FileSystem {
-    path: Option<PathBuf>,
+    documents: InMemoryPathStore<DocumentId>,
 }
 
 #[derive(Debug, Error)]
@@ -32,34 +36,20 @@ pub enum FileSystemError {
 
 impl FileSystem {
     pub fn new() -> Self {
-        Self { path: None }
-    }
-
-    pub fn with_path<P: AsRef<Path>>(path: P) -> Self {
         Self {
-            path: Some(path.as_ref().to_path_buf()),
+            documents: InMemoryPathStore::default(),
         }
     }
 
-    fn get_path(&self) -> Result<PathBuf, FileSystemError> {
-        self.path.clone().ok_or(FileSystemError::NoFilePath)
-    }
-
-    fn read_file(&self) -> Result<Vec<u8>, FileSystemError> {
-        let path = self.get_path()?;
-        if !path.is_file() {
-            return Err(FileSystemError::NotAFile(path.clone()));
-        }
+    fn read_file<P: AsRef<Path>>(&self, path: P) -> Result<Vec<u8>, FileSystemError> {
         std::fs::read(path).map_err(FileSystemError::IoError)
     }
 
-    fn write_file(&self, content: &[u8]) -> Result<(), FileSystemError> {
-        let path = self.get_path()?;
+    fn write_file<P: AsRef<Path>>(&self, path: P, content: &[u8]) -> Result<(), FileSystemError> {
         std::fs::write(path, content).map_err(FileSystemError::IoError)
     }
 
-    fn create_file(&self) -> Result<(), FileSystemError> {
-        let path = self.get_path()?;
+    fn create_file<P: AsRef<Path>>(&self, path: P) -> Result<(), FileSystemError> {
         std::fs::File::create(path).map_err(FileSystemError::IoError)?;
         Ok(())
     }
@@ -74,33 +64,40 @@ impl DocumentRepository for FileSystem {
         &self,
         _req: &CreateDocumentRequest,
     ) -> Result<Document, CreateDocumentError> {
-        self.create_file();
-        self.write_file(_req.content().as_bytes());
-
         let document = Document::builder()
             .with_content(_req.content().clone())
+            .generate_id()
             .saved_now()
             .build();
-
+        // TODO Cancel if no path is provided
+        let path = request_save_path_dialog(None).expect("Failed to get save path");
+        let id = document.id();
+        // Borrow a mutable reference to self
+        self.documents.insert(id, path.clone());
+        self.create_file(path.clone());
+        self.write_file(path, _req.content().as_bytes());
         Ok(document)
     }
 
     async fn get_document(&self, _req: &GetDocumentRequest) -> Result<Document, GetDocumentError> {
-        let content = self.read_file().unwrap();
-        let content = self.to_utf8(content).unwrap();
-        let document = Document::builder()
-            .with_content(content.into())
-            .saved_now()
-            .build();
+        unimplemented!()
+        // let content = self.read_file().unwrap();
+        // let content = self.to_utf8(content).unwrap();
+        // let document = Document::builder()
+        //     .with_content(content.into())
+        //     .saved_now()
+        //     .build();
 
-        Ok(document)
+        // Ok(document)
     }
 
     async fn update_document(
         &self,
         _req: &UpdateDocumentRequest,
     ) -> Result<(), UpdateDocumentError> {
-        self.write_file(_req.content().as_bytes());
+        let id = _req.id();
+        let path = self.documents.get(&id).unwrap();
+        self.write_file(path, _req.content().as_bytes());
         Ok(())
     }
 }

@@ -1,3 +1,4 @@
+pub mod config;
 mod data;
 pub mod editor;
 use editor::ports::DocumentRepository;

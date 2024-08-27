@@ -1,12 +1,35 @@
 use std::future::Future;
 
 use derive_more::derive::{AsRef, Constructor, Deref, Display, From, FromStr};
+use serde::Deserialize;
 use thiserror::Error;
 
 use crate::data::Timestamp;
+use uuid::Uuid;
+
+#[derive(Debug, Error, Clone, PartialEq, Eq, Display, Copy, Ord, PartialOrd, Hash, Deserialize)]
+pub struct DocumentId(Uuid);
+
+impl Default for DocumentId {
+    fn default() -> Self {
+        DocumentId(Uuid::new_v4())
+    }
+}
 
 #[derive(
-    Debug, Clone, Display, PartialOrd, Ord, PartialEq, Eq, AsRef, Deref, Constructor, FromStr, Hash,
+    Debug,
+    Clone,
+    Display,
+    PartialOrd,
+    Ord,
+    PartialEq,
+    Eq,
+    AsRef,
+    Deref,
+    Constructor,
+    FromStr,
+    Hash,
+    Deserialize,
 )]
 pub struct Content(String);
 
@@ -22,9 +45,10 @@ impl From<String> for Content {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub struct Document {
     // title: Title,
+    id: DocumentId,
     content: Content,
     saved_at: Option<Timestamp>,
     modified_at: Option<Timestamp>,
@@ -41,9 +65,13 @@ impl Document {
         self.content = content.into();
         self.set_modified();
     }
+    pub fn id(&self) -> DocumentId {
+        self.id
+    }
 }
 
 pub struct DocumentBuilder {
+    id: Option<DocumentId>,
     content: Option<Content>,
     saved_at: Option<Timestamp>,
     modified_at: Option<Timestamp>,
@@ -52,6 +80,7 @@ pub struct DocumentBuilder {
 impl DocumentBuilder {
     pub fn new() -> Self {
         Self {
+            id: None,
             content: None,
             saved_at: None,
             modified_at: None,
@@ -69,8 +98,17 @@ impl DocumentBuilder {
         self.modified_at = Some(Timestamp::default());
         self
     }
+    pub fn with_id(mut self, id: DocumentId) -> Self {
+        self.id = Some(id);
+        self
+    }
+    pub fn generate_id(mut self) -> Self {
+        self.id = Some(DocumentId::default());
+        self
+    }
     pub fn build(self) -> Document {
         Document {
+            id: self.id.unwrap(),
             content: self.content.unwrap(),
             saved_at: self.saved_at,
             modified_at: self.modified_at,
@@ -101,12 +139,17 @@ pub enum CreateDocumentError {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
 pub struct UpdateDocumentRequest {
+    id: DocumentId,
     content: Content,
 }
 
 impl UpdateDocumentRequest {
-    pub fn new(content: Content) -> Self {
-        Self { content }
+    pub fn new(id: DocumentId, content: Content) -> Self {
+        Self { id, content }
+    }
+
+    pub fn id(&self) -> DocumentId {
+        self.id
     }
 
     pub fn content(&self) -> &Content {
@@ -121,7 +164,9 @@ pub enum UpdateDocumentError {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
-pub struct GetDocumentRequest {}
+pub struct GetDocumentRequest {
+    id: DocumentId,
+}
 
 #[derive(Debug, Error)]
 pub enum GetDocumentError {

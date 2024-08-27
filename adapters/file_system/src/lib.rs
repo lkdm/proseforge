@@ -1,7 +1,9 @@
+pub mod dialogs;
+
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 
-use crate::domain::editor::{
+use pf_core::editor::{
     models::{
         CreateDocumentError, CreateDocumentRequest, Document, GetDocumentError, GetDocumentRequest,
         UpdateDocumentError, UpdateDocumentRequest,

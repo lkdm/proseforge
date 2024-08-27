@@ -1,20 +1,12 @@
-use md_core::domain::editor::models::UpdateDocumentRequest;
-use md_core::domain::editor::ports::InMemoryDocumentRepository;
-use md_core::NodeError;
-use md_core::TauriNode;
-use md_fs::{
-    request_ignore_unsaved_changes_dialog, request_open_path_dialog, request_save_path_dialog,
-};
-use std::sync::Arc;
+use pf_core::editor::models::UpdateDocumentRequest;
+use pf_core::{Node, NodeError};
+use pf_file_system::FileSystem;
 use std::sync::Mutex;
-use tauri::menu::{
-    AboutMetadata, AboutMetadataBuilder, CheckMenuItemBuilder, MenuBuilder, MenuItemBuilder,
-    PredefinedMenuItem, SubmenuBuilder,
-};
+use tauri::menu::{AboutMetadataBuilder, MenuBuilder, MenuItemBuilder, SubmenuBuilder};
 use tauri::{async_runtime::block_on, TitleBarStyle, WebviewUrl, WebviewWindowBuilder};
 use tauri::{AppHandle, Emitter, Manager};
-use tauri_plugin_dialog::DialogExt;
-use tokio::task::block_in_place;
+
+type AppState = Node<FileSystem>;
 
 // the payload type must implement `Serialize` and `Clone`.
 #[derive(Clone, serde::Serialize)]
@@ -25,7 +17,7 @@ struct Payload {
 #[tauri::command]
 async fn handle_update_content(
     content: String,
-    state: tauri::State<'_, Mutex<TauriNode>>,
+    state: tauri::State<'_, Mutex<AppState>>,
 ) -> Result<(), NodeError> {
     // Lock the state safely
     let ds;
@@ -44,7 +36,7 @@ async fn handle_update_content(
 #[tauri::command]
 async fn handle_open_dialog(
     app: AppHandle,
-    state: tauri::State<'_, Mutex<TauriNode>>,
+    state: tauri::State<'_, Mutex<AppState>>,
 ) -> Result<(), NodeError> {
     let state = state.lock().unwrap();
     if state.editor.lock().unwrap().has_unsaved_changes() {
@@ -69,7 +61,7 @@ async fn handle_open_dialog(
 }
 
 #[tauri::command]
-async fn handle_save(state: tauri::State<'_, Mutex<TauriNode>>) -> Result<(), NodeError> {
+async fn handle_save(state: tauri::State<'_, Mutex<AppState>>) -> Result<(), NodeError> {
     let state = state.lock().unwrap();
     let result = {
         // Lock the editor and attempt to save

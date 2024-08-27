@@ -7,8 +7,8 @@ name = "Proseforge"
 version = "0.0.0"
 dependencies = [
  "cocoa 0.25.0",
- "md_core",
- "md_fs",
+ "pf_core",
+ "pf_file_system",
  "serde",
  "serde_json",
  "tauri",
@@ -2076,25 +2076,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2532096657941c2fea9c289d370a250971c689d4f143798ff67113ec042024a5"
 
 [[package]]
-name = "md_core"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "derive_more 1.0.0",
- "rfd",
- "serde",
- "thiserror",
- "tokio",
-]
-
-[[package]]
-name = "md_fs"
-version = "0.1.0"
-dependencies = [
- "rfd",
-]
-
-[[package]]
 name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2527,6 +2508,27 @@ name = "percent-encoding"
 version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
+
+[[package]]
+name = "pf_core"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "derive_more 1.0.0",
+ "rfd",
+ "serde",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
+name = "pf_file_system"
+version = "0.1.0"
+dependencies = [
+ "pf_core",
+ "rfd",
+ "thiserror",
+]
 
 [[package]]
 name = "phf"

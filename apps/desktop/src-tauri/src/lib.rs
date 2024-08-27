@@ -31,7 +31,7 @@ async fn handle_open_document(
     app: AppHandle,
     state: tauri::State<'_, Mutex<AppState>>,
 ) -> Result<Document, NodeError> {
-    unimplemented!()
+    unimplemented!();
 }
 
 #[tauri::command]
@@ -181,14 +181,15 @@ pub fn run() {
             let handle = app.handle();
 
             // Create a new Node instance
-            let node = match AppState::new() {
+            let fs = FileSystem::new();
+            let node = match AppState::new(fs) {
                 Ok(node) => node,
                 Err(e) => {
                     eprintln!("Error creating Node instance: {:?}", e);
                     std::process::exit(1);
                 }
             };
-            let config = Config::new();
+            let config = Config::default();
             handle.manage(node.clone());
 
             // Tauri-specific

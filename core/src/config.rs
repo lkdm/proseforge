@@ -11,3 +11,11 @@ pub enum Theme {
 pub struct Config {
     pub theme: Theme,
 }
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            theme: Theme::System,
+        }
+    }
+}

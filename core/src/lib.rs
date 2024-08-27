@@ -19,3 +19,13 @@ pub enum NodeError {
     #[error("Error with repository.")]
     RepositoryError,
 }
+
+impl<DR: DocumentRepository> Node<DR> {
+    pub fn new(document_repo: DR) -> Result<Self, NodeError> {
+        let node = Node {
+            document_repo: Arc::new(document_repo),
+        };
+        // TODO: Return Arc of Node
+        return Ok(node);
+    }
+}

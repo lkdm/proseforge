@@ -1,10 +1,10 @@
-mod data;
 pub mod editor;
 pub mod node;
-use editor::ports::{
-    component::ComponentRepository, content::ContentRepository, project::ProjectRepository,
-};
+pub mod project;
+
+use editor::ports::ContentRepository;
 use node::ports::NodeConfigRepository;
+use project::ports::{ComponentRepository, ProjectRepository};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use thiserror::Error;

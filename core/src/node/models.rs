@@ -5,6 +5,7 @@ use thiserror::Error;
 
 use super::Id;
 
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
 pub struct UserId(Id);
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]

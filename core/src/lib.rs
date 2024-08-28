@@ -1,18 +1,20 @@
-pub mod config;
 mod data;
 pub mod editor;
-pub mod project;
-use editor::ports::DocumentRepository;
+pub mod node;
+use editor::ports::{
+    component::ComponentRepository, content::ContentRepository, project::ProjectRepository,
+};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use thiserror::Error;
 
 #[derive(Debug, Clone)]
 /// The application state available to all request handlers.
-pub struct Node<DR: DocumentRepository> {
-    pub document_repo: Arc<DR>,
-    // pub document_ds: Arc<IMDR>,
-    // config: Arc<CR>
+pub struct Node<PRR: ProjectRepository, CMP: ComponentRepository, COR: ContentRepository> {
+    pub document_repo: Arc<PRR>,
+    pub component_repo: Arc<CMP>,
+    pub content_repo: Arc<COR>,
+    // Todo: Implement config repo
 }
 
 #[derive(Debug, Error, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]

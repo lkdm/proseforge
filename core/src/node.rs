@@ -1,3 +1,7 @@
+pub mod models;
+pub mod ports;
+
+// TODO: Business logic for node goes here, inc. config.
 use chrono::{DateTime, Utc};
 use derive_more::derive::{AsRef, Deref, Display};
 use rusty_ulid::{generate_ulid_bytes, Ulid};

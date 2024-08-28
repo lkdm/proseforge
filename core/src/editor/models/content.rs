@@ -2,7 +2,7 @@ use derive_more::derive::From;
 use std::error::Error;
 use thiserror::Error;
 
-use crate::data::{Id, Timestamp};
+use crate::node::{Id, Timestamp};
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
 pub struct ContentId(Id);
@@ -38,6 +38,9 @@ pub struct DeleteContentRequest {
 pub struct GetContentRequest {
     id: ContentId,
 }
+
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
+pub struct ListContentRequest {} // TODO: Filters, pagination, params
 
 #[derive(Debug, Error)]
 pub enum UpdateContentError {
@@ -75,6 +78,12 @@ pub enum DeleteContentError {
 pub enum GetContentError {
     #[error("Content not found")]
     NotFound,
+    #[error("Operation failed: {0}")]
+    OperationError(#[source] Box<dyn Error + Send + Sync>),
+}
+
+#[derive(Debug, Error)]
+pub enum ListContentError {
     #[error("Operation failed: {0}")]
     OperationError(#[source] Box<dyn Error + Send + Sync>),
 }

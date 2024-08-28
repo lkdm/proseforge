@@ -2,7 +2,8 @@ use std::future::Future;
 
 use crate::editor::models::content::{
     Content, CreateContentError, CreateContentRequest, DeleteContentError, DeleteContentRequest,
-    GetContentError, GetContentRequest, UpdateContentError, UpdateContentRequest,
+    GetContentError, GetContentRequest, ListContentError, ListContentRequest, UpdateContentError,
+    UpdateContentRequest,
 };
 
 /// ContentRepository
@@ -30,4 +31,10 @@ pub trait ContentRepository: Clone + Send + Sync + 'static {
         &self,
         req: &DeleteContentRequest,
     ) -> impl Future<Output = Result<(), DeleteContentError>> + Send;
+
+    /// Lists content from the repository.
+    fn list_content(
+        &self,
+        req: &ListContentRequest,
+    ) -> impl Future<Output = Result<Vec<Content>, ListContentError>> + Send;
 }

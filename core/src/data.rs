@@ -29,6 +29,7 @@ impl Default for Timestamp {
 
 /// An ID for a resource.
 /// Usage: `struct MyResourceId(Id)`
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Id([u8; 16]);
 impl Id {
     pub fn new() -> Self {

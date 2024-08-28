@@ -2730,6 +2730,7 @@ dependencies = [
  "chrono",
  "derive_more 1.0.0",
  "rfd",
+ "rusqlite",
  "rusty_ulid",
  "serde",
  "strum",
@@ -3731,6 +3732,7 @@ dependencies = [
 name = "sqlite"
 version = "0.1.0"
 dependencies = [
+ "pf_core",
  "rfd",
  "rusqlite",
  "sqlite-ulid",

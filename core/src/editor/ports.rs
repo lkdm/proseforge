@@ -1,9 +1,9 @@
 use std::future::Future;
 
 use super::models::{
-    Content, CreateContentError, CreateContentRequest, DeleteContentError, DeleteContentRequest,
-    GetContentError, GetContentRequest, ListContentError, ListContentRequest, UpdateContentError,
-    UpdateContentRequest,
+    Content, ContentId, CreateContentError, CreateContentRequest, DeleteContentError,
+    DeleteContentRequest, GetContentError, GetContentRequest, ListContentError, ListContentRequest,
+    UpdateContentError, UpdateContentRequest,
 };
 
 /// ContentRepository
@@ -12,7 +12,7 @@ pub trait ContentRepository: Clone + Send + Sync + 'static {
     fn create_content(
         &self,
         req: &CreateContentRequest,
-    ) -> impl Future<Output = Result<Content, CreateContentError>> + Send;
+    ) -> impl Future<Output = Result<ContentId, CreateContentError>> + Send;
 
     /// Retrieves content from the repository.
     fn get_content(

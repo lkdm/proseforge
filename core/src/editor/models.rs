@@ -1,4 +1,5 @@
 use derive_more::derive::From;
+use rusqlite::Error as RusqliteError;
 use std::error::Error;
 use thiserror::Error;
 
@@ -7,6 +8,12 @@ use crate::node::{Id, Timestamp};
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
 pub struct ContentId(Id);
 
+impl ContentId {
+    pub fn new(id: Id) -> Self {
+        ContentId(id)
+    }
+}
+
 /// Content is text that can be edited in the editor.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
 pub struct Content {
@@ -14,7 +21,6 @@ pub struct Content {
     data: String,
 
     created_at: Timestamp,
-    saved_at: Option<Timestamp>,
     modified_at: Option<Timestamp>,
     deleted_at: Option<Timestamp>,
 }
@@ -27,7 +33,7 @@ pub struct UpdateContentRequest {
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
 pub struct CreateContentRequest {
-    data: Option<String>,
+    pub data: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
@@ -63,6 +69,8 @@ pub enum CreateContentError {
     DuplicateError,
     #[error("Operation failed: {0}")]
     OperationError(#[source] Box<dyn Error + Send + Sync>),
+    #[error("Database error: {0}")]
+    DatabaseError(#[from] RusqliteError),
 }
 
 #[derive(Debug, Error)]

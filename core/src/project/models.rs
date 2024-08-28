@@ -12,13 +12,22 @@ pub struct ProjectId(Id);
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
 pub struct Title(String);
 
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From, strum_macros::EnumString)]
+#[strum(serialize_all = "lowercase")]
+pub enum ProjectKind {
+    ShortStory,
+    Novel,
+    NovelWithParts,
+}
+
 /// A project is a collection of components and content.
 ///
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
 pub struct Project {
     id: ProjectId,
+    kind: ProjectKind,
     title: Title,
-    root_components: Vec<ComponentId>,
+    components: Vec<ComponentId>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
@@ -95,6 +104,7 @@ pub enum ListProjectsError {
 pub struct ComponentId(Id);
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From, strum_macros::EnumString)]
+#[strum(serialize_all = "lowercase")]
 pub enum ComponentKind {
     Draft,
     Part,
@@ -115,7 +125,7 @@ pub enum ComponentKind {
 pub struct Component {
     id: ComponentId,
     kind: ComponentKind,
-    children: Vec<ComponentId>,
+    components: Vec<ComponentId>,
     parent: Option<ComponentId>,
 
     summary: Option<ContentId>,

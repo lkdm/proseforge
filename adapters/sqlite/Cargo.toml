@@ -7,3 +7,4 @@ edition = "2021"
 rusqlite = { version = "0.32.1", features = ["bundled"] }
 thiserror = "1.0.63"
 rfd = "0.14.1"
+sqlite-ulid = "0.2.1"

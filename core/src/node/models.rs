@@ -1,6 +1,7 @@
 use derive_more::derive::From;
 use std::error::Error;
 use std::path::PathBuf;
+use strum_macros::EnumString;
 use thiserror::Error;
 
 use super::Id;
@@ -13,7 +14,8 @@ pub enum NodeConfigVersion {
     V0,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From, EnumString)]
+#[strum(serialize_all = "lowercase")]
 pub enum Theme {
     System,
     Light,

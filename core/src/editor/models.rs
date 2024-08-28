@@ -16,6 +16,7 @@ pub struct Content {
     created_at: Timestamp,
     saved_at: Option<Timestamp>,
     modified_at: Option<Timestamp>,
+    deleted_at: Option<Timestamp>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]

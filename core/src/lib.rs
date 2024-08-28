@@ -10,7 +10,7 @@ use std::sync::Arc;
 use thiserror::Error;
 
 #[derive(Debug, Clone)]
-/// The application state available to all request handlers.
+/// Represents the central application state, aggregating various repositories.
 pub struct Node<
     PRR: ProjectRepository,
     CMP: ComponentRepository,
@@ -21,7 +21,6 @@ pub struct Node<
     pub component_repo: Arc<CMP>,
     pub content_repo: Arc<COR>,
     pub config_repo: Arc<CFG>,
-    // Todo: Implement config repo
 }
 
 #[derive(Debug, Error, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]

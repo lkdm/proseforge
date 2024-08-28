@@ -1,78 +1,52 @@
-use std::path::PathBuf;
+use std::{collections::HashMap, path::PathBuf};
 
 use strum_macros::EnumString;
 
-use crate::data::{ChapterId, DocumentId, DraftId, NoteId, PartId, ProjectId, SceneId};
+use crate::{
+    data::{Id, Timestamp},
+    editor::models::ContentId,
+};
 
-pub struct Title(String);
-
-enum DraftComponent {
-    Scene(SceneId),
-    Chapter(ChapterId),
-    Part(PartId),
-}
-pub struct Draft {
-    id: DraftId,
+struct Content {
+    id: ContentId,
     title: Title,
-    components: Vec<DraftComponent>,
-    note: Option<NoteId>,
+    data: String,
+
+    created_at: Timestamp,
+    saved_at: Option<Timestamp>,
+    modified_at: Option<Timestamp>,
 }
 
-enum PartComponent {
-    Chapter(ChapterId),
-    Scene(SceneId),
+struct Title(String);
+struct ComponentId(Id);
+
+#[derive(strum_macros::EnumString)]
+enum ComponentKind {
+    Draft,
+    Part,
+    Chapter,
+    Scene,
+    Character,
+    Location,
+    Note,
+    Research,
+    Outline,
 }
 
-pub struct Part {
-    id: PartId,
-    title: Title,
-    components: Vec<PartComponent>,
-    note: Option<NoteId>,
+struct Component {
+    id: ComponentId,
+    kind: ComponentKind,
+
+    document: Option<ContentId>,
+    summary: Option<ContentId>,
+    note: Option<ContentId>,
+
+    children: Vec<ComponentId>,
+    parent: Option<ComponentId>,
 }
 
-enum ChapterComponent {
-    Scene(SceneId),
-}
-
-pub struct Chapter {
-    id: ChapterId,
-    title: Title,
-    components: Vec<ChapterComponent>,
-    note: Option<NoteId>,
-}
-
-#[derive(EnumString)]
-pub enum ProjectKind {
-    Novel,
-    ShortStory,
-    Screenplay,
-    StagePlay,
-    Poem,
-    Article,
-    Essay,
-    BlogPost,
-    Thesis,
-    Other,
-}
-
-pub struct Note {
-    id: NoteId,
-    document: DocumentId,
-}
-
-pub struct Scene {
-    id: SceneId,
-    document: DocumentId,
-    note: NoteId,
-    title: Title,
-}
-
-pub struct Project {
-    id: ProjectId,
-    kind: ProjectKind,
-
-    drafts: Vec<DraftId>,
-    notes: Vec<NoteId>,
-
-    path: Option<PathBuf>,
+struct Project {
+    root_components: Vec<ComponentId>,
+    components_by_id: HashMap<ComponentId, Component>,
+    content_by_id: HashMap<ContentId, Content>,
 }

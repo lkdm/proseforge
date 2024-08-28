@@ -1,6 +1,3 @@
-use std::path::PathBuf;
-
-use crate::data::DocumentId;
 use derive_more::derive::{AsRef, Constructor, Deref, Display, From, FromStr};
 use serde::Deserialize;
 use thiserror::Error;
@@ -36,10 +33,13 @@ impl From<String> for Content {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize, Copy)]
+pub struct ContentId(Id);
+
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-pub struct Document {
+pub struct Content {
     // title: Title,
-    id: DocumentId,
+    id: ContentId,
     content: Content,
     saved_at: Option<Timestamp>,
     modified_at: Option<Timestamp>,

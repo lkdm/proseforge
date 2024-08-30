@@ -1,40 +1,34 @@
 use std::future::Future;
 
 use super::models::{
-    Content, ContentId, CreateContentError, CreateContentRequest, DeleteContentError,
-    DeleteContentRequest, GetContentError, GetContentRequest, ListContentError, ListContentRequest,
-    UpdateContentError, UpdateContentRequest,
+    CreateDocumentError, CreateDocumentRequest, DeleteDocumentError, DeleteDocumentRequest,
+    Document, GetDocumentError, GetDocumentRequest, UpdateDocumentError, UpdateDocumentRequest,
 };
+use proseforge_common::Id;
 
-/// ContentRepository
-pub trait ContentRepository: Clone + Send + Sync + 'static {
+/// DocumentRepository
+pub trait DocumentRepository: Clone + Send + Sync + 'static {
     /// Creates new content in the repository.
-    fn create_content(
+    fn create_document(
         &self,
-        req: &CreateContentRequest,
-    ) -> impl Future<Output = Result<ContentId, CreateContentError>> + Send;
+        req: &CreateDocumentRequest,
+    ) -> impl Future<Output = Result<Id, CreateDocumentError>> + Send;
 
-    /// Retrieves content from the repository.
-    fn get_content(
+    /// Retrieves document from the repository.
+    fn get_document(
         &self,
-        req: &GetContentRequest,
-    ) -> impl Future<Output = Result<Content, GetContentError>> + Send;
+        req: &GetDocumentRequest,
+    ) -> impl Future<Output = Result<Document, GetDocumentError>> + Send;
 
-    /// Updates existing content in the repository.
-    fn update_content(
+    /// Updates existing document in the repository.
+    fn update_document(
         &self,
-        req: &UpdateContentRequest,
-    ) -> impl Future<Output = Result<(), UpdateContentError>> + Send;
+        req: &UpdateDocumentRequest,
+    ) -> impl Future<Output = Result<(), UpdateDocumentError>> + Send;
 
-    /// Deletes content from the repository.
-    fn delete_content(
+    /// Deletes document from the repository.
+    fn delete_document(
         &self,
-        req: &DeleteContentRequest,
-    ) -> impl Future<Output = Result<(), DeleteContentError>> + Send;
-
-    /// Lists content from the repository.
-    fn list_content(
-        &self,
-        req: &ListContentRequest,
-    ) -> impl Future<Output = Result<Vec<Content>, ListContentError>> + Send;
+        req: &DeleteDocumentRequest,
+    ) -> impl Future<Output = Result<(), DeleteDocumentError>> + Send;
 }

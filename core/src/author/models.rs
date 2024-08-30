@@ -1,4 +1,4 @@
-use derive_more::derive::From;
+use derive_more::derive::{Deref, From};
 use std::error::Error;
 use std::path::PathBuf;
 use strum_macros::EnumString;
@@ -6,7 +6,7 @@ use thiserror::Error;
 
 use super::Id;
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
+#[derive(Deref, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
 pub struct UserId(Id);
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]

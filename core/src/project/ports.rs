@@ -1,7 +1,7 @@
 use super::models::{
-    Component, CreateComponentError, CreateComponentRequest, DeleteComponentError,
-    DeleteComponentRequest, GetComponentError, GetComponentRequest, ListComponentError,
-    ListComponentRequest, UpdateComponentError, UpdateComponentRequest,
+    CreateComponentError, CreateComponentRequest, DeleteComponentError, DeleteComponentRequest,
+    GetComponentError, GetComponentRequest, ListComponentError, ListComponentRequest,
+    ProjectComponent, UpdateComponentError, UpdateComponentRequest,
 };
 use super::models::{
     CreateProjectError, CreateProjectRequest, DeleteProjectError, DeleteProjectRequest,
@@ -49,13 +49,13 @@ pub trait ComponentRepository: Clone + Send + Sync + 'static {
     fn create_component(
         &self,
         req: &CreateComponentRequest,
-    ) -> impl Future<Output = Result<Component, CreateComponentError>> + Send;
+    ) -> impl Future<Output = Result<ProjectComponent, CreateComponentError>> + Send;
 
     /// Retrieves component from the repository.
     fn get_component(
         &self,
         req: &GetComponentRequest,
-    ) -> impl Future<Output = Result<Component, GetComponentError>> + Send;
+    ) -> impl Future<Output = Result<ProjectComponent, GetComponentError>> + Send;
 
     /// Updates existing component in the repository.
     fn update_component(
@@ -73,5 +73,5 @@ pub trait ComponentRepository: Clone + Send + Sync + 'static {
     fn list_components(
         &self,
         req: &ListComponentRequest,
-    ) -> impl Future<Output = Result<Vec<Component>, ListComponentError>> + Send;
+    ) -> impl Future<Output = Result<Vec<ProjectComponent>, ListComponentError>> + Send;
 }

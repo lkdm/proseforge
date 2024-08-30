@@ -1,11 +1,15 @@
 [package]
-name = "sqlite"
+name = "proseforge_sqlite"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-pf_core = { path = "../../core" }
-rusqlite = { version = "0.32.1", features = ["bundled"] }
+proseforge_core = { path = "../../core" }
+proseforge_common = { path = "../../crates/common" }
+rusqlite = { version = "0.32.1", features = ["bundled", "uuid", "chrono"] }
 thiserror = "1.0.63"
 rfd = "0.14.1"
-sqlite-ulid = "0.2.1"
+chrono = { version = "0.4.38", features = ["serde"] }
+sqlx = { version = "0.8.1", features = ["runtime-tokio-native-tls", "sqlite"] }
+tokio = { version = "1.20.0", features = ["macros"] }
+anyhow = "1.0"

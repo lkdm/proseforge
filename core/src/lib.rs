@@ -1,10 +1,7 @@
-pub mod editor;
+pub mod features;
 pub mod node;
-pub mod project;
 
-use editor::ports::DocumentRepository;
-// use node::ports::NodeConfigRepository;
-use project::ports::{ComponentRepository, ProjectRepository};
+use features::project::ports::{ComponentRepository, DocumentRepository, ProjectRepository};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use thiserror::Error;

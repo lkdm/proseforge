@@ -1,5 +1,6 @@
 use crate::node::Timestamp;
-use derive_more::derive::{Deref, From};
+use anyhow;
+use derive_more::derive::From;
 use proseforge_common::Id;
 use std::{
     error::Error,
@@ -60,7 +61,7 @@ pub struct Document {
     content: Content,
 
     created_at: Timestamp,
-    modified_at: Option<Timestamp>,
+    modified_at: Timestamp,
     deleted_at: Option<Timestamp>,
 }
 
@@ -72,14 +73,21 @@ impl Hash for Document {
 }
 
 impl Document {
-    fn new(project_id: Id, content: String) -> Self {
+    fn new(
+        id: Id,
+        project_id: Id,
+        content: Content,
+        created_at: Timestamp,
+        modified_at: Timestamp,
+        deleted_at: Option<Timestamp>,
+    ) -> Self {
         Document {
-            id: Id::new(),
+            id,
             project_id,
-            content: Content::from(content),
-            created_at: Timestamp::now(),
-            modified_at: None,
-            deleted_at: None,
+            content,
+            created_at,
+            modified_at,
+            deleted_at,
         }
     }
     pub fn builder<T>(project_id: T) -> DocumentBuilder
@@ -88,13 +96,31 @@ impl Document {
     {
         DocumentBuilder::new(project_id.into())
     }
+    pub fn id(&self) -> Id {
+        self.id.clone()
+    }
+    pub fn project_id(&self) -> Id {
+        self.project_id.clone()
+    }
+    pub fn content(&self) -> Content {
+        self.content.clone()
+    }
+    pub fn created_at(self) -> Timestamp {
+        self.created_at.clone()
+    }
+    pub fn modified_at(&self) -> Timestamp {
+        self.modified_at.clone()
+    }
+    pub fn deleted_at(&self) -> Option<Timestamp> {
+        self.deleted_at.clone()
+    }
 }
 
 /// Builder for Document
 ///
 /// Allows for a document to be built up in a fluent style.
 #[derive(Clone, Debug)]
-struct DocumentBuilder {
+pub struct DocumentBuilder {
     project_id: Id,
     id: Option<Id>,
     content: Option<Content>,
@@ -113,6 +139,14 @@ impl DocumentBuilder {
             modified_at: None,
             deleted_at: None,
         }
+    }
+
+    pub fn with_defaults(mut self) -> Self {
+        self.id = Some(Id::new());
+        self.content = Some(Content::default());
+        self.created_at = Some(Timestamp::now());
+        self.modified_at = Some(Timestamp::now());
+        self
     }
 
     pub fn with_id<T>(mut self, id: T) -> Self
@@ -157,21 +191,13 @@ impl DocumentBuilder {
 
     pub fn build(self) -> Document {
         Document::new(
-            self.id,
+            self.id.unwrap_or(Id::new()),
             self.project_id,
-            self.content,
-            self.created_at,
-            self.modified_at,
+            self.content.unwrap_or(Content::default()),
+            self.created_at.unwrap_or(Timestamp::now()),
+            self.modified_at.unwrap_or(Timestamp::now()),
             self.deleted_at,
         )
-        // Document {
-        //     id: self.id.unwrap_or(Id::new()),
-        //     project_id: self.project_id,
-        //     content: self.content.unwrap_or(Content::default()).into(),
-        //     created_at: self.created_at.unwrap_or(Timestamp::now()),
-        //     modified_at: self.modified_at,
-        //     deleted_at: self.deleted_at,
-        // }
     }
 }
 
@@ -179,16 +205,11 @@ impl DocumentBuilder {
 pub struct UpdateDocumentRequest {
     id: Id,
     content: Content,
-    deleted_at: Option<Timestamp>,
 }
 
 impl UpdateDocumentRequest {
-    pub fn new(id: Id, content: String) -> Result<Self, UpdateDocumentError> {
-        let req = UpdateDocumentRequest {
-            id,
-            content: Content::new(content)?,
-        };
-        Ok(req)
+    pub fn new(id: Id, content: Content) -> Self {
+        UpdateDocumentRequest { id, content }
     }
     pub fn id(&self) -> Id {
         self.id.clone()
@@ -196,33 +217,54 @@ impl UpdateDocumentRequest {
     pub fn content(&self) -> Content {
         self.content.clone()
     }
+    pub fn modified_at(&self) -> Timestamp {
+        Timestamp::now()
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
 pub struct CreateDocumentRequest {
-    content: Option<Content>,
+    project_id: Id,
 }
 
 impl CreateDocumentRequest {
-    pub fn new(content: String) -> Result<Self, CreateDocumentError> {
-        let req = CreateDocumentRequest {
-            content: Some(Content::new(content)?),
-        };
-        Ok(req)
+    pub fn new(project_id: Id) -> Self {
+        CreateDocumentRequest { project_id }
     }
-    pub fn content(&self) -> Content {
-        self.content.clone().unwrap()
+    pub fn project_id(&self) -> Id {
+        self.project_id.clone()
     }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
 pub struct DeleteDocumentRequest {
-    pub id: Id,
+    id: Id,
+}
+
+impl DeleteDocumentRequest {
+    pub fn new(id: Id) -> Self {
+        DeleteDocumentRequest { id }
+    }
+    pub fn id(&self) -> Id {
+        self.id.clone()
+    }
+    pub fn deleted_at(&self) -> Timestamp {
+        Timestamp::now()
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
 pub struct GetDocumentRequest {
-    pub id: Id,
+    id: Id,
+}
+
+impl GetDocumentRequest {
+    pub fn new(id: Id) -> Self {
+        GetDocumentRequest { id }
+    }
+    pub fn id(&self) -> Id {
+        self.id.clone()
+    }
 }
 
 #[derive(Debug, Error)]
@@ -243,13 +285,8 @@ pub enum UpdateDocumentError {
 
 #[derive(Debug, Error)]
 pub enum CreateDocumentError {
-    #[error("Repository error: {source}")]
-    RepositoryError {
-        #[from]
-        source: sqlx::Error,
-    },
     #[error("Operation failed: {0}")]
-    UnexpectedError(#[source] Box<dyn Error + Send + Sync>),
+    UnexpectedError(String),
 }
 
 #[derive(Debug, Error)]
@@ -266,12 +303,17 @@ pub enum DeleteDocumentError {
 #[derive(Debug, Error)]
 pub enum GetDocumentError {
     #[error("Repository error: {source}")]
-    RepositoryError {
+    DatabaseError {
         #[from]
         source: sqlx::Error,
     },
-    #[error("Operation failed: {0}")]
-    UnexpectedError(#[source] Box<dyn Error + Send + Sync>),
+    #[error("Operation failed: {source}")]
+    OperationFailed {
+        #[from]
+        source: anyhow::Error,
+    },
+    #[error(transparent)]
+    IOError(#[from] std::io::Error),
 }
 
 #[derive(Debug, Error)]

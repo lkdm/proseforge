@@ -1,9 +1,17 @@
-use super::models::{
+///
+/// Ports are the interfaces that the application uses to interact with the outside world.
+use proseforge_common::Id;
+
+use crate::features::project::models::component::{
     CreateComponentError, CreateComponentRequest, DeleteComponentError, DeleteComponentRequest,
     GetComponentError, GetComponentRequest, ListComponentError, ListComponentRequest,
     ProjectComponent, UpdateComponentError, UpdateComponentRequest,
 };
-use super::models::{
+use crate::features::project::models::document::{
+    CreateDocumentError, CreateDocumentRequest, DeleteDocumentError, DeleteDocumentRequest,
+    Document, GetDocumentError, GetDocumentRequest, UpdateDocumentError, UpdateDocumentRequest,
+};
+use crate::features::project::models::project::{
     CreateProjectError, CreateProjectRequest, DeleteProjectError, DeleteProjectRequest,
     GetProjectError, GetProjectRequest, ListProjectsError, ListProjectsRequest, Project,
     UpdateProjectError, UpdateProjectRequest,
@@ -74,4 +82,31 @@ pub trait ComponentRepository: Clone + Send + Sync + 'static {
         &self,
         req: &ListComponentRequest,
     ) -> impl Future<Output = Result<Vec<ProjectComponent>, ListComponentError>> + Send;
+}
+
+/// DocumentRepository
+pub trait DocumentRepository: Clone + Send + Sync + 'static {
+    /// Creates new content in the repository.
+    fn create_document(
+        &self,
+        req: &CreateDocumentRequest,
+    ) -> impl Future<Output = Result<Id, CreateDocumentError>> + Send;
+
+    /// Retrieves document from the repository.
+    fn get_document(
+        &self,
+        req: &GetDocumentRequest,
+    ) -> impl Future<Output = Result<Document, GetDocumentError>> + Send;
+
+    /// Updates existing document in the repository.
+    fn update_document(
+        &self,
+        req: &UpdateDocumentRequest,
+    ) -> impl Future<Output = Result<(), UpdateDocumentError>> + Send;
+
+    /// Deletes document from the repository.
+    fn delete_document(
+        &self,
+        req: &DeleteDocumentRequest,
+    ) -> impl Future<Output = Result<(), DeleteDocumentError>> + Send;
 }

@@ -15,3 +15,4 @@ tokio = "1.39.3"
 strum_macros = "0.26.4"
 proseforge_common = { path = "../crates/common" }
 sqlx = { version = "0.8.1", features = ["sqlite", "runtime-tokio-native-tls"] }
+anyhow = "1.0.86"

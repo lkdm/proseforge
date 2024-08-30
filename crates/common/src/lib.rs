@@ -19,6 +19,10 @@ impl Id {
     pub fn new() -> Self {
         Id(generate_ulid_bytes())
     }
+    pub fn from_string(s: &str) -> Result<Self, IdError> {
+        let ulid = Ulid::from_str(s).map_err(|_| IdError::InvalidUlid)?;
+        Ok(ulid.into())
+    }
 }
 
 impl Display for Id {
@@ -35,6 +39,13 @@ impl From<Ulid> for Id {
 impl From<String> for Id {
     fn from(s: String) -> Self {
         let ulid = Ulid::from_str(&s).unwrap();
+        ulid.into()
+    }
+}
+
+impl From<&str> for Id {
+    fn from(s: &str) -> Self {
+        let ulid = Ulid::from_str(s).unwrap();
         ulid.into()
     }
 }

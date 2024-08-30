@@ -3206,6 +3206,7 @@ dependencies = [
 name = "proseforge_core"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "chrono",
  "derive_more 1.0.0",
  "proseforge_common",

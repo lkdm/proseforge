@@ -14,7 +14,7 @@ pub enum ContentError {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-struct Content(String);
+pub struct Content(String);
 
 impl Content {
     pub fn new(content: String) -> Result<Self, ContentError> {
@@ -26,6 +26,12 @@ impl Content {
         }
 
         Ok(Content(trimmed_content))
+    }
+}
+
+impl Default for Content {
+    fn default() -> Self {
+        Content::new(String::new()).unwrap()
     }
 }
 
@@ -70,14 +76,17 @@ impl Document {
         Document {
             id: Id::new(),
             project_id,
-            content,
+            content: Content::from(content),
             created_at: Timestamp::now(),
             modified_at: None,
             deleted_at: None,
         }
     }
-    pub fn builder(project_id: Id) -> DocumentBuilder {
-        DocumentBuilder::new(project_id)
+    pub fn builder<T>(project_id: T) -> DocumentBuilder
+    where
+        T: Into<Id>,
+    {
+        DocumentBuilder::new(project_id.into())
     }
 }
 
@@ -88,7 +97,7 @@ impl Document {
 struct DocumentBuilder {
     project_id: Id,
     id: Option<Id>,
-    content: Option<String>,
+    content: Option<Content>,
     created_at: Option<Timestamp>,
     modified_at: Option<Timestamp>,
     deleted_at: Option<Timestamp>,
@@ -106,57 +115,104 @@ impl DocumentBuilder {
         }
     }
 
-    pub fn with_id(mut self, id: Id) -> Self {
-        self.id = Some(id);
+    pub fn with_id<T>(mut self, id: T) -> Self
+    where
+        T: Into<Id>,
+    {
+        self.id = Some(id.into());
         self
     }
 
-    pub fn with_project_id(mut self, project_id: Id) -> Self {
-        self.project_id = Some(project_id);
+    pub fn with_content<T>(mut self, content: T) -> Self
+    where
+        T: Into<Content>,
+    {
+        self.content = Some(content.into());
         self
     }
 
-    pub fn with_content(mut self, content: String) -> Self {
-        self.content = Some(content);
+    pub fn with_created_at<T>(mut self, created_at: T) -> Self
+    where
+        T: Into<Timestamp>,
+    {
+        self.created_at = Some(created_at.into());
         self
     }
 
-    pub fn with_created_at(mut self, created_at: Timestamp) -> Self {
-        self.created_at = Some(created_at);
+    pub fn with_modified_at<T>(mut self, modified_at: Option<T>) -> Self
+    where
+        T: Into<Timestamp>,
+    {
+        self.modified_at = modified_at.map(|t| t.into());
         self
     }
 
-    pub fn with_modified_at(mut self, modified_at: Timestamp) -> Self {
-        self.modified_at = Some(modified_at);
-        self
-    }
-
-    pub fn with_deleted_at(mut self, deleted_at: Timestamp) -> Self {
-        self.deleted_at = Some(deleted_at);
+    pub fn with_deleted_at<T>(mut self, deleted_at: Option<T>) -> Self
+    where
+        T: Into<Timestamp>,
+    {
+        self.deleted_at = deleted_at.map(|t| t.into());
         self
     }
 
     pub fn build(self) -> Document {
-        Document {
-            id: self.id.unwrap_or(Id::new()),
-            project_id: self.project_id.expect("project_id is mandatory"),
-            content: self.content.unwrap_or(String::new()).into(),
-            created_at: self.created_at.unwrap_or(Timestamp::now()),
-            modified_at: self.modified_at,
-            deleted_at: self.deleted_at,
-        }
+        Document::new(
+            self.id,
+            self.project_id,
+            self.content,
+            self.created_at,
+            self.modified_at,
+            self.deleted_at,
+        )
+        // Document {
+        //     id: self.id.unwrap_or(Id::new()),
+        //     project_id: self.project_id,
+        //     content: self.content.unwrap_or(Content::default()).into(),
+        //     created_at: self.created_at.unwrap_or(Timestamp::now()),
+        //     modified_at: self.modified_at,
+        //     deleted_at: self.deleted_at,
+        // }
     }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
 pub struct UpdateDocumentRequest {
     id: Id,
-    content: String,
+    content: Content,
+    deleted_at: Option<Timestamp>,
+}
+
+impl UpdateDocumentRequest {
+    pub fn new(id: Id, content: String) -> Result<Self, UpdateDocumentError> {
+        let req = UpdateDocumentRequest {
+            id,
+            content: Content::new(content)?,
+        };
+        Ok(req)
+    }
+    pub fn id(&self) -> Id {
+        self.id.clone()
+    }
+    pub fn content(&self) -> Content {
+        self.content.clone()
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
 pub struct CreateDocumentRequest {
-    pub content: Option<String>,
+    content: Option<Content>,
+}
+
+impl CreateDocumentRequest {
+    pub fn new(content: String) -> Result<Self, CreateDocumentError> {
+        let req = CreateDocumentRequest {
+            content: Some(Content::new(content)?),
+        };
+        Ok(req)
+    }
+    pub fn content(&self) -> Content {
+        self.content.clone().unwrap()
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
@@ -171,44 +227,51 @@ pub struct GetDocumentRequest {
 
 #[derive(Debug, Error)]
 pub enum UpdateDocumentError {
-    #[error("Document not found")]
-    NotFound,
-    #[error("Invalid document data: {0}")]
-    ValidationError(String),
-    #[error("Conflict: {0}")]
-    ConflictError(String),
+    #[error("Validation error: {source}")]
+    ValidationError {
+        #[from]
+        source: ContentError,
+    },
+    #[error("Repository error: {source}")]
+    RepositoryError {
+        #[from]
+        source: sqlx::Error,
+    },
     #[error("Operation failed: {0}")]
-    OperationError(#[source] Box<dyn Error + Send + Sync>),
+    UnexpectedError(#[source] Box<dyn Error + Send + Sync>),
 }
 
 #[derive(Debug, Error)]
 pub enum CreateDocumentError {
-    #[error("Invalid content data: {0}")]
-    ValidationError(String),
-    #[error("Duplicate content")]
-    DuplicateError,
+    #[error("Repository error: {source}")]
+    RepositoryError {
+        #[from]
+        source: sqlx::Error,
+    },
     #[error("Operation failed: {0}")]
-    OperationError(#[source] Box<dyn Error + Send + Sync>),
-    // #[error("Database error: {0}")]
-    // DatabaseError(#[from] RusqliteError),
+    UnexpectedError(#[source] Box<dyn Error + Send + Sync>),
 }
 
 #[derive(Debug, Error)]
 pub enum DeleteDocumentError {
-    #[error("Document not found")]
-    NotFound,
-    #[error("Cannot delete: document is referenced")]
-    ReferenceError,
+    #[error("Repository error: {source}")]
+    RepositoryError {
+        #[from]
+        source: sqlx::Error,
+    },
     #[error("Operation failed: {0}")]
-    OperationError(#[source] Box<dyn Error + Send + Sync>),
+    UnexpectedError(#[source] Box<dyn Error + Send + Sync>),
 }
 
 #[derive(Debug, Error)]
 pub enum GetDocumentError {
-    #[error("Document not found")]
-    NotFound,
+    #[error("Repository error: {source}")]
+    RepositoryError {
+        #[from]
+        source: sqlx::Error,
+    },
     #[error("Operation failed: {0}")]
-    OperationError(#[source] Box<dyn Error + Send + Sync>),
+    UnexpectedError(#[source] Box<dyn Error + Send + Sync>),
 }
 
 #[derive(Debug, Error)]

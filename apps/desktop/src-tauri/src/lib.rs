@@ -1,10 +1,10 @@
-use pf_core::config::{Config, Theme};
-use pf_core::editor::models::{
+use pf_file_system::FileSystem;
+use proseforge_core::config::{Config, Theme};
+use proseforge_core::editor::models::{
     Content, CreateDocumentRequest, Document, DocumentId, UpdateDocumentRequest,
 };
-use pf_core::editor::ports::DocumentRepository;
-use pf_core::{config, Node, NodeError};
-use pf_file_system::FileSystem;
+use proseforge_core::editor::ports::DocumentRepository;
+use proseforge_core::{config, Node, NodeError};
 use std::sync::Mutex;
 use tauri::menu::{AboutMetadataBuilder, MenuBuilder, MenuItemBuilder, SubmenuBuilder};
 use tauri::{async_runtime::block_on, TitleBarStyle, WebviewUrl, WebviewWindowBuilder};

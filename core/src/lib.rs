@@ -2,8 +2,8 @@ pub mod editor;
 pub mod node;
 pub mod project;
 
-use editor::ports::ContentRepository;
-use node::ports::NodeConfigRepository;
+use editor::ports::DocumentRepository;
+// use node::ports::NodeConfigRepository;
 use project::ports::{ComponentRepository, ProjectRepository};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -11,16 +11,18 @@ use thiserror::Error;
 
 #[derive(Debug, Clone)]
 /// Represents the central application state, aggregating various repositories.
+///
+/// Also provides high-level handlers for dealing with the repositories.
 pub struct Node<
-    PRR: ProjectRepository,
-    CMP: ComponentRepository,
-    COR: ContentRepository,
-    CFG: NodeConfigRepository,
+    PR: ProjectRepository,
+    CR: ComponentRepository,
+    DR: DocumentRepository,
+    // CFG: ConfigRepository,
 > {
-    pub document_repo: Arc<PRR>,
-    pub component_repo: Arc<CMP>,
-    pub content_repo: Arc<COR>,
-    pub config_repo: Arc<CFG>,
+    pub project_repo: Arc<PR>,
+    pub component_repo: Arc<CR>,
+    pub document_repo: Arc<DR>,
+    // pub config_repo: Arc<CFG>,
 }
 
 #[derive(Debug, Error, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -30,23 +32,23 @@ pub enum NodeError {
 }
 
 impl<
-        P: ProjectRepository,
-        C: ComponentRepository,
-        CO: ContentRepository,
-        CFG: NodeConfigRepository,
-    > Node<P, C, CO, CFG>
+        PR: ProjectRepository,
+        CR: ComponentRepository,
+        DR: DocumentRepository,
+        // CFG: NodeConfigRepository,
+    > Node<PR, CR, DR>
 {
     pub fn new(
-        project_repo: P,
-        component_repo: C,
-        content_repo: CO,
-        config_repo: CFG,
+        project_repo: PR,
+        component_repo: CR,
+        document_repo: DR,
+        // config_repo: CFG,
     ) -> Result<Self, NodeError> {
         let node = Node {
-            document_repo: Arc::new(project_repo),
+            project_repo: Arc::new(project_repo),
             component_repo: Arc::new(component_repo),
-            content_repo: Arc::new(content_repo),
-            config_repo: Arc::new(config_repo),
+            document_repo: Arc::new(document_repo),
+            // config_repo: Arc::new(config_repo),
         };
         return Ok(node);
     }

@@ -2,7 +2,7 @@ pub mod dialogs;
 mod store;
 use crate::store::InMemoryPathStore;
 use dialogs::request_save_path_dialog;
-use pf_core::editor::{
+use proseforge_core::editor::{
     models::{
         CreateDocumentError, CreateDocumentRequest, Document, DocumentId, GetDocumentError,
         GetDocumentRequest, UpdateDocumentError, UpdateDocumentRequest,

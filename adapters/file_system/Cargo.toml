@@ -1,5 +1,5 @@
 [package]
-name = "pf_file_system"
+name = "proseforge_filesystem"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,4 +8,4 @@ edition = "2021"
 [dependencies]
 thiserror = "1.0.63"
 rfd = "0.14.1"
-pf_core = { path = "../../core" }
+proseforge_core = { path = "../../core" }

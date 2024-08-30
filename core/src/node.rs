@@ -32,6 +32,19 @@ impl Timestamp {
     }
 }
 
+impl From<String> for Timestamp {
+    fn from(s: String) -> Self {
+        let naive = NaiveDateTime::parse_from_str(&s, "%Y-%m-%d %H:%M:%S").unwrap();
+        Self(naive)
+    }
+}
+
+impl Into<String> for Timestamp {
+    fn into(self) -> String {
+        self.0.to_string()
+    }
+}
+
 impl Default for Timestamp {
     fn default() -> Self {
         Self::now()

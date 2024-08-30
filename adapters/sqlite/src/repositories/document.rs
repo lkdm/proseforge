@@ -8,6 +8,7 @@ use proseforge_core::features::project::{
     },
     ports::DocumentRepository,
 };
+use proseforge_core::node::Timestamp;
 use sqlx::{query, Row};
 
 use crate::SqliteAdapter;
@@ -47,6 +48,9 @@ impl DocumentRepository for SqliteAdapter {
         .bind::<String>(req.id().into())
         .fetch_one(&*pool)
         .await?;
+
+        let c: String = row.try_get("created_at")?;
+        print!("{:?}", c);
 
         let id: String = row.try_get("id")?;
         let content: String = row.try_get("content")?;
@@ -169,20 +173,20 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_create_document() -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_document_repository() -> Result<(), Box<dyn std::error::Error>> {
         let adapter = setup().await?;
         seed(adapter.clone()).await?;
         let req = CreateDocumentRequest::new(project_id().into());
 
-        let result = adapter.create_document(&req).await;
+        let res = adapter
+            .create_document(&req)
+            .await
+            .expect("Failed to create document.");
 
-        match result {
-            Ok(_) => assert!(true),
-            Err(e) => {
-                eprintln!("Error creating document: {:?}", e);
-                assert!(false, "Test failed.");
-            }
-        }
+        let req = GetDocumentRequest::new(res.into());
+        let document = adapter.get_document(&req).await?;
+
+        assert_eq!(document.project_id(), project_id());
         Ok(())
     }
 }

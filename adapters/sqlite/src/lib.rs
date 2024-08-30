@@ -1,12 +1,4 @@
 pub mod repositories;
-use chrono::NaiveDateTime;
-use proseforge_core::editor::{
-    models::{
-        Content, ContentId, CreateContentError, CreateContentRequest, GetContentError,
-        GetContentRequest,
-    },
-    ports::ContentRepository,
-};
 use sqlx::Row;
 use sqlx::{migrate::MigrateDatabase, Error as SqlxError, Sqlite, SqlitePool};
 use sqlx::{
@@ -39,12 +31,16 @@ impl SqliteAdapter {
             pool: Arc::new(pool),
         })
     }
+    pub fn pool(&self) -> Arc<SqlitePool> {
+        self.pool.clone()
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use anyhow::{Context, Result};
+    use sqlx::Row;
     use sqlx::{query, SqlitePool};
     use tokio;
 

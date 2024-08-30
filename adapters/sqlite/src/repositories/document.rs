@@ -8,7 +8,6 @@ use proseforge_core::features::project::{
     },
     ports::DocumentRepository,
 };
-use proseforge_core::node::Timestamp;
 use sqlx::{query, Row};
 
 use crate::SqliteAdapter;
@@ -176,17 +175,53 @@ mod tests {
     async fn test_document_repository() -> Result<(), Box<dyn std::error::Error>> {
         let adapter = setup().await?;
         seed(adapter.clone()).await?;
-        let req = CreateDocumentRequest::new(project_id().into());
 
+        // Create a document
+        let req = CreateDocumentRequest::new(project_id().into());
         let res = adapter
             .create_document(&req)
             .await
             .expect("Failed to create document.");
 
+        let id = res.clone();
+        // Get the document
         let req = GetDocumentRequest::new(res.into());
-        let document = adapter.get_document(&req).await?;
-
+        let document = adapter
+            .get_document(&req)
+            .await
+            .expect("Failed to get document.");
         assert_eq!(document.project_id(), project_id());
+
+        // Update the document
+        let req =
+            UpdateDocumentRequest::new(id.clone().into(), String::from("Hello World!").into());
+        let res = adapter
+            .update_document(&req)
+            .await
+            .expect("Failed to update document.");
+        assert_eq!(res, ());
+
+        // Get document again to check if it was updated
+        let req = GetDocumentRequest::new(id.clone().into());
+        let document = adapter
+            .get_document(&req)
+            .await
+            .expect("Failed to get document.");
+        assert_eq!(document.content(), "Hello World!".to_string().into());
+
+        // Soft-delete the document
+        let req = DeleteDocumentRequest::new(id.clone().into());
+        let res = adapter
+            .delete_document(&req)
+            .await
+            .expect("Failed to delete document.");
+        assert_eq!(res, ());
+
+        // Check if the document was soft-deleted
+        let req = GetDocumentRequest::new(id.into());
+        let document = adapter.get_document(&req).await;
+        assert!(document.unwrap().deleted_at().is_some());
+
         Ok(())
     }
 }

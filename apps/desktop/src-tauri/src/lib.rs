@@ -45,7 +45,7 @@ async fn handle_open_document(
         let state = state.lock().unwrap();
         state.project_service.clone()
     };
-    let dto = project_service.document_get(&data).await?;
+    let dto = project_service.clone().document_get(&data).await?;
     Ok(dto)
 }
 
@@ -192,9 +192,13 @@ async fn handle_update_content(
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 #[tokio::main]
 pub async fn run() {
+    // Share the tokio runtime with tauri.
+    tauri::async_runtime::set(tokio::runtime::Handle::current());
+
     tauri::Builder::default()
         .setup(move |app| {
             let handle = app.handle();
+
             // We need a the app handle to determine the data directory now.
             // This means all the setup code has to be within `setup`, however it doesn't support async so we `block_on`.
             block_in_place(|| {

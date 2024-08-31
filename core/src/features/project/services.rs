@@ -70,15 +70,15 @@ pub struct GetDocumentResponseDto {
     content: String,
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Serialize, Deserialize)]
 pub enum ServiceError {
-    #[error("Document creation failed: {0}")]
-    CreateDocumentError(#[from] CreateDocumentError),
+    #[error("Document creation failed")]
+    CreateDocumentError,
 
-    #[error("Document retrieval failed: {0}")]
-    GetDocumentError(#[from] GetDocumentError),
+    #[error("Document retrieval failed")]
+    GetDocumentError,
 
-    #[error("An unexpected error occurred: {0}")]
+    #[error("An unexpected error occurred")]
     UnexpectedError(String),
 }
 
@@ -95,7 +95,7 @@ where
         let result = self.repo.create_document(&request).await;
         match result {
             Ok(r) => Ok(r.into()),
-            Err(e) => Err(ServiceError::CreateDocumentError(e)),
+            Err(e) => Err(ServiceError::CreateDocumentError),
         }
     }
     async fn document_content_update(&self, req: &str) -> Result<(), ServiceError> {
@@ -119,7 +119,7 @@ where
                 id: r.id().into(),
                 content: r.content().into(),
             }),
-            Err(e) => Err(ServiceError::GetDocumentError(e)),
+            Err(e) => Err(ServiceError::GetDocumentError),
         }
     }
 }

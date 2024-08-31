@@ -1,13 +1,12 @@
-use anyhow::Context;
 use anyhow::Result;
 use proseforge_common::Id;
-use proseforge_core::features::project::models::component::CreateComponentError;
-use proseforge_core::features::project::models::component::CreateComponentRequest;
-use proseforge_core::features::project::models::component::ProjectComponent;
+use proseforge_core::features::project::models::document::CreateDocumentRequest;
+use proseforge_core::features::project::models::document::GetDocumentError;
+use proseforge_core::features::project::models::document::GetDocumentRequest;
 use proseforge_core::features::project::{
     models::document::{
-        CreateDocumentError, CreateDocumentRequest, DeleteDocumentError, DeleteDocumentRequest,
-        Document, GetDocumentError, GetDocumentRequest, UpdateDocumentError, UpdateDocumentRequest,
+        CreateDocumentError, DeleteDocumentError, DeleteDocumentRequest, Document,
+        UpdateDocumentError, UpdateDocumentRequest,
     },
     ports::ProjectRepository,
 };
@@ -254,10 +253,8 @@ impl ProjectRepository for SqliteAdapter {
 mod tests {
     use super::*;
     use anyhow::{Context, Result};
-    use proseforge_core::features::project::models::component::{
-        ComponentKind, DeleteComponentRequest, GetComponentRequest, UpdateComponentRequest,
-    };
-    use sqlx::{query, SqlitePool};
+
+    use sqlx::query;
     use tokio;
 
     const DATABASE_URL: &str = "sqlite::memory:";

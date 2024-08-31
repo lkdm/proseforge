@@ -1,11 +1,6 @@
 pub mod repositories;
-use sqlx::Row;
-use sqlx::{migrate::MigrateDatabase, Error as SqlxError, Sqlite, SqlitePool};
-use sqlx::{
-    query,
-    sqlite::{SqliteConnectOptions, SqlitePoolOptions},
-};
-use std::sync::{Arc, Mutex};
+use sqlx::{Error as SqlxError, SqlitePool};
+use std::sync::Arc;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -38,7 +33,7 @@ impl SqliteAdapter {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    
     use anyhow::{Context, Result};
     use sqlx::Row;
     use sqlx::{query, SqlitePool};

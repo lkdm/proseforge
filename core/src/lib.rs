@@ -1,7 +1,7 @@
 pub mod features;
 pub mod node;
 
-use features::project::{ports::ProjectRepository, services::ProjectService};
+use features::project::services::ProjectService;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use thiserror::Error;

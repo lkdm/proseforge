@@ -2,19 +2,9 @@
 /// Ports are the interfaces that the application uses to interact with the outside world.
 use proseforge_common::Id;
 
-use crate::features::project::models::component::{
-    CreateComponentError, CreateComponentRequest, DeleteComponentError, DeleteComponentRequest,
-    GetComponentError, GetComponentRequest, ListComponentError, ListComponentRequest,
-    ProjectComponent, UpdateComponentError, UpdateComponentRequest,
-};
 use crate::features::project::models::document::{
     CreateDocumentError, CreateDocumentRequest, DeleteDocumentError, DeleteDocumentRequest,
     Document, GetDocumentError, GetDocumentRequest, UpdateDocumentError, UpdateDocumentRequest,
-};
-use crate::features::project::models::project::{
-    CreateProjectError, CreateProjectRequest, DeleteProjectError, DeleteProjectRequest,
-    GetProjectError, GetProjectRequest, ListProjectsError, ListProjectsRequest, Project,
-    UpdateProjectError, UpdateProjectRequest,
 };
 use std::future::Future;
 

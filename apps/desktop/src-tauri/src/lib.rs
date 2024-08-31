@@ -1,7 +1,10 @@
 use proseforge_core::features::project::models::document::CreateDocumentRequest;
 use proseforge_core::features::project::services::CreateDocumentRequestDto;
+use proseforge_core::features::project::services::GetDocumentRequestDto;
+use proseforge_core::features::project::services::GetDocumentResponseDto;
 use proseforge_core::features::project::services::ProjectService;
 use proseforge_core::features::project::services::Service;
+use proseforge_core::features::project::services::ServiceError;
 use proseforge_core::{Node, NodeError};
 use proseforge_sqlite::SqliteAdapter;
 use std::sync::{Arc, Mutex};
@@ -28,16 +31,22 @@ async fn handle_new_document(
         let state = state.lock().unwrap();
         state.project_service.clone()
     };
-    project_service.create_document(&data);
+    project_service.document_create(&data);
     Ok(())
 }
 
 #[tauri::command]
 async fn handle_open_document(
+    data: GetDocumentRequestDto,
     app: AppHandle,
     state: tauri::State<'_, Mutex<AppState>>,
-) -> Result<Document, NodeError> {
-    unimplemented!();
+) -> Result<GetDocumentResponseDto, ServiceError> {
+    let project_service = {
+        let state = state.lock().unwrap();
+        state.project_service.clone()
+    };
+    let dto = project_service.document_get(&data).await?;
+    Ok(dto)
 }
 
 #[tauri::command]
@@ -181,7 +190,8 @@ async fn handle_update_content(
 // }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub fn run() {
+#[tokio::main]
+pub async fn run() {
     tauri::Builder::default()
         .setup(move |app| {
             let handle = app.handle();

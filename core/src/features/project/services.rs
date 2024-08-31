@@ -1,11 +1,10 @@
-use std::{
-    future::Future,
-    sync::{Arc, Mutex},
-};
+use std::{future::Future, sync::Arc};
 
 use proseforge_common::Id;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+
+use crate::features::project::models::document::GetDocumentRequest;
 
 ///
 /// Service contains functions that more directly relate to the business logic of the application.
@@ -14,7 +13,7 @@ use thiserror::Error;
 /// It may also publish events or perform other side effects.
 ///
 use super::{
-    models::document::{CreateDocumentError, CreateDocumentRequest},
+    models::document::{CreateDocumentError, CreateDocumentRequest, GetDocumentError},
     ports::ProjectRepository,
 };
 
@@ -39,15 +38,19 @@ where
 }
 
 pub trait ProjectService {
-    fn create_document(
+    fn document_create(
         &self,
         req: &CreateDocumentRequestDto,
     ) -> impl Future<Output = Result<Id, ServiceError>> + Send;
-    fn update_document_content(
+    fn document_content_update(
         &self,
         req: &str,
     ) -> impl Future<Output = Result<(), ServiceError>> + Send;
-    fn save_document_changes(&self) -> impl Future<Output = Result<(), ServiceError>> + Send;
+    fn document_content_save(&self) -> impl Future<Output = Result<(), ServiceError>> + Send;
+    fn document_get(
+        &self,
+        req: &GetDocumentRequestDto,
+    ) -> impl Future<Output = Result<GetDocumentResponseDto, ServiceError>> + Send;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -57,10 +60,23 @@ pub struct CreateDocumentRequestDto {
     kind: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GetDocumentRequestDto {
+    id: String,
+}
+
+pub struct GetDocumentResponseDto {
+    id: String,
+    content: String,
+}
+
 #[derive(Debug, Error)]
 pub enum ServiceError {
     #[error("Document creation failed: {0}")]
     CreateDocumentError(#[from] CreateDocumentError),
+
+    #[error("Document retrieval failed: {0}")]
+    GetDocumentError(#[from] GetDocumentError),
 
     #[error("An unexpected error occurred: {0}")]
     UnexpectedError(String),
@@ -72,7 +88,7 @@ where
 {
     /// Create a new document in the project.
     /// This creates a new component and document in the project, and returns the component id.
-    async fn create_document(&self, req: &CreateDocumentRequestDto) -> Result<Id, ServiceError> {
+    async fn document_create(&self, req: &CreateDocumentRequestDto) -> Result<Id, ServiceError> {
         // TODO: This needs to take a parent component_id to know where to put the document.
         let project_id = req.project_id.clone();
         let request = CreateDocumentRequest::new(project_id.into());
@@ -82,12 +98,28 @@ where
             Err(e) => Err(ServiceError::CreateDocumentError(e)),
         }
     }
-    async fn update_document_content(&self, req: &str) -> Result<(), ServiceError> {
+    async fn document_content_update(&self, req: &str) -> Result<(), ServiceError> {
         print!("Updating document content: {}", req);
         Ok(())
     }
-    async fn save_document_changes(&self) -> Result<(), ServiceError> {
+    async fn document_content_save(&self) -> Result<(), ServiceError> {
         print!("Saving document changes");
         Ok(())
+    }
+    async fn document_get(
+        &self,
+        req: &GetDocumentRequestDto,
+    ) -> Result<GetDocumentResponseDto, ServiceError> {
+        print!("Getting document: {}", req.id);
+
+        let request = GetDocumentRequest::new(req.id.clone().into());
+        let result = self.repo.get_document(&request).await;
+        match result {
+            Ok(r) => Ok(GetDocumentResponseDto {
+                id: r.id().into(),
+                content: r.content().into(),
+            }),
+            Err(e) => Err(ServiceError::GetDocumentError(e)),
+        }
     }
 }

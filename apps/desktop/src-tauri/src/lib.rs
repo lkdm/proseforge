@@ -3,17 +3,19 @@ use proseforge_core::features::project::services::CreateDocumentRequestDto;
 use proseforge_core::features::project::services::GetDocumentRequestDto;
 use proseforge_core::features::project::services::GetDocumentResponseDto;
 use proseforge_core::features::project::services::ProjectService;
-use proseforge_core::features::project::services::Service;
 use proseforge_core::features::project::services::ServiceError;
+use proseforge_core::features::project::services::StatefulService;
+use proseforge_core::features::project::services::UpdateDocumentRequestDto;
 use proseforge_core::{Node, NodeError};
 use proseforge_sqlite::SqliteAdapter;
 use std::sync::{Arc, Mutex};
 use tauri::menu::{AboutMetadataBuilder, MenuBuilder, MenuItemBuilder, SubmenuBuilder};
+use tauri::State;
 use tauri::{async_runtime::block_on, TitleBarStyle, WebviewUrl, WebviewWindowBuilder};
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::task::block_in_place;
 
-type AppState = Node<Service<SqliteAdapter>>;
+type AppState = Node<StatefulService<SqliteAdapter>>;
 
 // the payload type must implement `Serialize` and `Clone`.
 #[derive(Clone, serde::Serialize)]
@@ -38,50 +40,21 @@ async fn handle_new_document(
 #[tauri::command]
 async fn handle_open_document(
     data: GetDocumentRequestDto,
-    app: AppHandle,
-    state: tauri::State<'_, Mutex<AppState>>,
+    app: tauri::AppHandle,
+    state: State<'_, Arc<AppState>>,
 ) -> Result<GetDocumentResponseDto, ServiceError> {
-    let project_service = {
-        let state = state.lock().unwrap();
-        state.project_service.clone()
-    };
-    let dto = project_service
-        .clone()
-        .document_get(&data)
-        .await?
-        .context("Failed to get document")?;
-    Ok(dto)
+    let project_service = state.project_service.clone();
+    project_service.document_get(&data).await
 }
 
 #[tauri::command]
 async fn handle_save_document(
-    id: Option<DocumentId>,
-    content: Content,
-    app: AppHandle,
-    state: tauri::State<'_, Mutex<AppState>>,
-) -> Result<(), NodeError> {
-    // Lock the state safely
-    let ds;
-    {
-        let state = state.lock().unwrap();
-        ds = state.document_repo.clone();
-    }
-    if let Some(id) = id {
-        let request = UpdateDocumentRequest::new(id, content);
-        ds.update_document(&request);
-    } else {
-        let request = CreateDocumentRequest::new(content);
-        ds.create_document(&request);
-    }
-    Ok(())
-}
-
-#[tauri::command]
-async fn handle_update_content(
-    content: String,
-    state: tauri::State<'_, Mutex<Node>>,
-) -> Result<(), NodeError> {
-    unimplemented!()
+    data: UpdateDocumentRequestDto,
+    app: tauri::AppHandle,
+    state: State<'_, Arc<AppState>>,
+) -> Result<(), ServiceError> {
+    let project_service = state.project_service.clone();
+    project_service.document_update(&data).await
 }
 
 // #[tauri::command]
@@ -208,10 +181,9 @@ pub async fn run() {
             block_in_place(|| {
                 block_on(async move {
                     let sqlite_adapter = SqliteAdapter::new("sqlite::memory:").await.unwrap();
-                    let service = Service::new(sqlite_adapter);
+                    let service = StatefulService::new(sqlite_adapter);
                     let node = Node::new(service.clone());
                     handle.manage(node.clone());
-                    Ok(())
                 })
             });
 
@@ -270,12 +242,12 @@ pub async fn run() {
             // Events
 
             handle.on_menu_event(move |handle, event| {
-                if event.id() == "NEW" {
-                    block_on(handle_new_document(handle.clone(), handle.state())).unwrap();
-                }
-                if event.id() == "OPEN" {
-                    block_on(handle_open_document(handle.clone(), handle.state())).unwrap();
-                }
+                // if event.id() == "NEW" {
+                //     block_on(handle_new_document(handle.clone(), handle.state())).unwrap();
+                // }
+                // if event.id() == "OPEN" {
+                //     block_on(handle_open_document(handle.clone(), handle.state())).unwrap();
+                // }
                 if event.id() == "SAVE" {
                     todo!("Got to get content from memory here.")
                     // block_on(handle_save_document(handle.state())).unwrap();
@@ -319,9 +291,9 @@ pub async fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
+            handle_new_document,
             handle_open_document,
             handle_save_document,
-            handle_update_content,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

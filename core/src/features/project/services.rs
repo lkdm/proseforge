@@ -13,25 +13,29 @@ use crate::features::project::models::document::GetDocumentRequest;
 /// It may also publish events or perform other side effects.
 ///
 use super::{
-    models::document::{CreateDocumentError, CreateDocumentRequest, GetDocumentError},
+    models::document::{
+        CreateDocumentError, CreateDocumentRequest, GetDocumentError, UpdateDocumentRequest,
+    },
     ports::ProjectRepository,
 };
 
+/// # StatefulService
+///
+/// Holds state in memory. Used for client-facing services, such as desktop or web applications.
 #[derive(Debug, Clone)]
-pub struct Service<R>
+pub struct StatefulService<R>
 where
     R: ProjectRepository,
 {
     repo: Arc<R>,
-    // mem: Arc<Mutex<M>>,
 }
 
-impl<R> Service<R>
+impl<R> StatefulService<R>
 where
     R: ProjectRepository,
 {
     pub fn new(repo: R) -> Self {
-        Service {
+        StatefulService {
             repo: Arc::new(repo),
         }
     }
@@ -42,11 +46,10 @@ pub trait ProjectService {
         &self,
         req: &CreateDocumentRequestDto,
     ) -> impl Future<Output = Result<Id, ServiceError>> + Send;
-    fn document_content_update(
+    fn document_update(
         &self,
-        req: &str,
+        req: &UpdateDocumentRequestDto,
     ) -> impl Future<Output = Result<(), ServiceError>> + Send;
-    fn document_content_save(&self) -> impl Future<Output = Result<(), ServiceError>> + Send;
     fn document_get(
         &self,
         req: &GetDocumentRequestDto,
@@ -66,24 +69,27 @@ pub struct GetDocumentRequestDto {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpdateDocumentRequestDto {
+    id: String,
+    content: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GetDocumentResponseDto {
     id: String,
     content: String,
 }
 
-#[derive(Debug, Error)]
-pub enum ServiceError {
-    #[error("Document creation failed: {0}")]
-    CreateDocumentError(#[from] CreateDocumentError),
-
-    #[error("Document retrieval failed: {0}")]
-    GetDocumentError(#[from] GetDocumentError),
-
-    #[error("An unexpected error occurred: {0}")]
-    UnexpectedError(String),
+#[derive(Debug, Serialize, Error)]
+#[error("Application error")]
+pub struct ServiceError(String);
+impl From<anyhow::Error> for ServiceError {
+    fn from(err: anyhow::Error) -> Self {
+        ServiceError(err.to_string())
+    }
 }
 
-impl<R> ProjectService for Service<R>
+impl<R> ProjectService for StatefulService<R>
 where
     R: ProjectRepository,
 {
@@ -93,19 +99,18 @@ where
         // TODO: This needs to take a parent component_id to know where to put the document.
         let project_id = req.project_id.clone();
         let request = CreateDocumentRequest::new(project_id.into());
-        let result = self.repo.create_document(&request).await;
-        match result {
-            Ok(r) => Ok(r.into()),
-            Err(e) => Err(ServiceError::CreateDocumentError(e)),
-        }
+        self.repo
+            .create_document(&request)
+            .await
+            .map(Into::into)
+            .map_err(|e| ServiceError(e.to_string()))
     }
-    async fn document_content_update(&self, req: &str) -> Result<(), ServiceError> {
-        print!("Updating document content: {}", req);
-        Ok(())
-    }
-    async fn document_content_save(&self) -> Result<(), ServiceError> {
-        print!("Saving document changes");
-        Ok(())
+    async fn document_update(&self, req: &UpdateDocumentRequestDto) -> Result<(), ServiceError> {
+        let request = UpdateDocumentRequest::new(req.id.clone().into(), req.content.clone().into());
+        self.repo
+            .update_document(&request)
+            .await
+            .map_err(|e| ServiceError(e.to_string()))
     }
     async fn document_get(
         &self,
@@ -115,12 +120,13 @@ where
 
         let request = GetDocumentRequest::new(req.id.clone().into());
         let result = self.repo.get_document(&request).await;
-        match result {
-            Ok(r) => Ok(GetDocumentResponseDto {
+        self.repo
+            .get_document(&request)
+            .await
+            .map(|r| GetDocumentResponseDto {
                 id: r.id().into(),
                 content: r.content().into(),
-            }),
-            Err(e) => Err(ServiceError::GetDocumentError(e)),
-        }
+            })
+            .map_err(|e| ServiceError(e.to_string()))
     }
 }

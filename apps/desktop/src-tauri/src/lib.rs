@@ -1,16 +1,16 @@
-use pf_file_system::FileSystem;
-use proseforge_core::config::{Config, Theme};
-use proseforge_core::editor::models::{
-    Content, CreateDocumentRequest, Document, DocumentId, UpdateDocumentRequest,
-};
-use proseforge_core::editor::ports::DocumentRepository;
-use proseforge_core::{config, Node, NodeError};
-use std::sync::Mutex;
+use proseforge_core::features::project::models::document::CreateDocumentRequest;
+use proseforge_core::features::project::services::CreateDocumentRequestDto;
+use proseforge_core::features::project::services::ProjectService;
+use proseforge_core::features::project::services::Service;
+use proseforge_core::{Node, NodeError};
+use proseforge_sqlite::SqliteAdapter;
+use std::sync::{Arc, Mutex};
 use tauri::menu::{AboutMetadataBuilder, MenuBuilder, MenuItemBuilder, SubmenuBuilder};
 use tauri::{async_runtime::block_on, TitleBarStyle, WebviewUrl, WebviewWindowBuilder};
 use tauri::{AppHandle, Emitter, Manager};
+use tokio::task::block_in_place;
 
-type AppState = Node<FileSystem>;
+type AppState = Node<Service<SqliteAdapter>>;
 
 // the payload type must implement `Serialize` and `Clone`.
 #[derive(Clone, serde::Serialize)]
@@ -20,10 +20,16 @@ struct Payload {
 
 #[tauri::command]
 async fn handle_new_document(
+    data: CreateDocumentRequestDto,
     app: AppHandle,
     state: tauri::State<'_, Mutex<AppState>>,
 ) -> Result<(), NodeError> {
-    unimplemented!()
+    let project_service = {
+        let state = state.lock().unwrap();
+        state.project_service.clone()
+    };
+    project_service.create_document(&data);
+    Ok(())
 }
 
 #[tauri::command]
@@ -60,7 +66,7 @@ async fn handle_save_document(
 #[tauri::command]
 async fn handle_update_content(
     content: String,
-    state: tauri::State<'_, Mutex<AppState>>,
+    state: tauri::State<'_, Mutex<Node>>,
 ) -> Result<(), NodeError> {
     unimplemented!()
 }
@@ -179,18 +185,19 @@ pub fn run() {
     tauri::Builder::default()
         .setup(move |app| {
             let handle = app.handle();
+            // We need a the app handle to determine the data directory now.
+            // This means all the setup code has to be within `setup`, however it doesn't support async so we `block_on`.
+            block_in_place(|| {
+                block_on(async move {
+                    let sqlite_adapter = SqliteAdapter::new("sqlite::memory:").await.unwrap();
+                    let service = Service::new(sqlite_adapter);
+                    let node = Node::new(service.clone());
+                    handle.manage(node.clone());
+                    Ok(())
+                })
+            });
 
-            // Create a new Node instance
-            let fs = FileSystem::new();
-            let node = match AppState::new(fs) {
-                Ok(node) => node,
-                Err(e) => {
-                    eprintln!("Error creating Node instance: {:?}", e);
-                    std::process::exit(1);
-                }
-            };
-            let config = Config::default();
-            handle.manage(node.clone());
+            // let config = Config::default();
 
             // Tauri-specific
             let app_submenu = SubmenuBuilder::new(handle, "Application")
@@ -275,18 +282,18 @@ pub fn run() {
                 use cocoa::base::{id, nil};
 
                 let ns_window = window.ns_window().unwrap() as id;
-                unsafe {
-                    let bg_colour = match config.theme {
-                        Theme::Light => NSColor::colorWithRed_green_blue_alpha_(
-                            nil, 0.9294, 0.9294, 0.9098, 1.0,
-                        ),
-                        Theme::Dark => NSColor::colorWithRed_green_blue_alpha_(
-                            nil, 0.1529, 0.1451, 0.1529, 1.0,
-                        ),
-                        _ => NSColor::colorWithRed_green_blue_alpha_(nil, 1.0, 1.0, 1.0, 1.0),
-                    };
-                    ns_window.setBackgroundColor_(bg_colour);
-                }
+                // unsafe {
+                //     let bg_colour = match config.theme {
+                //         Theme::Light => NSColor::colorWithRed_green_blue_alpha_(
+                //             nil, 0.9294, 0.9294, 0.9098, 1.0,
+                //         ),
+                //         Theme::Dark => NSColor::colorWithRed_green_blue_alpha_(
+                //             nil, 0.1529, 0.1451, 0.1529, 1.0,
+                //         ),
+                //         _ => NSColor::colorWithRed_green_blue_alpha_(nil, 1.0, 1.0, 1.0, 1.0),
+                //     };
+                //     ns_window.setBackgroundColor_(bg_colour);
+                // }
             }
 
             Ok(())

@@ -1,14 +1,14 @@
 pub mod component;
 pub mod document;
 pub mod project;
-use derive_more::derive::From;
+use derive_more::derive::{AsRef, From};
 use thiserror::Error;
 
 #[derive(Error, Debug, Clone, PartialEq)]
 #[error("{0} is not a valid title.")]
 pub struct TitleError(String);
 
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From, AsRef)]
 pub struct Title(String);
 
 impl Title {
@@ -43,6 +43,12 @@ impl Title {
         }
 
         Ok(Title(normalized_title))
+    }
+}
+
+impl Default for Title {
+    fn default() -> Self {
+        Title("Untitled".to_string())
     }
 }
 

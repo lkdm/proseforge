@@ -1,3 +1,9 @@
+use std::{
+    future::Future,
+    sync::{Arc, Mutex},
+};
+
+use proseforge_common::Id;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -17,16 +23,36 @@ pub struct Service<R>
 where
     R: ProjectRepository,
 {
-    repo: R,
+    repo: Arc<R>,
+    // mem: Arc<Mutex<M>>,
+}
+
+impl<R> Service<R>
+where
+    R: ProjectRepository,
+{
+    pub fn new(repo: R) -> Self {
+        Service {
+            repo: Arc::new(repo),
+        }
+    }
 }
 
 pub trait ProjectService {
-    fn create_document(&self, req: &NewDocumentRequest) -> Result<(), ServiceError>;
+    fn create_document(
+        &self,
+        req: &CreateDocumentRequestDto,
+    ) -> impl Future<Output = Result<Id, ServiceError>> + Send;
+    fn update_document_content(
+        &self,
+        req: &str,
+    ) -> impl Future<Output = Result<(), ServiceError>> + Send;
+    fn save_document_changes(&self) -> impl Future<Output = Result<(), ServiceError>> + Send;
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct NewDocumentRequest {
-    parent_id: String,
+pub struct CreateDocumentRequestDto {
+    parent_id: Option<String>,
     project_id: String,
     kind: String,
 }
@@ -44,10 +70,24 @@ impl<R> ProjectService for Service<R>
 where
     R: ProjectRepository,
 {
-    fn create_document(&self, req: &NewDocumentRequest) -> Result<(), ServiceError> {
+    /// Create a new document in the project.
+    /// This creates a new component and document in the project, and returns the component id.
+    async fn create_document(&self, req: &CreateDocumentRequestDto) -> Result<Id, ServiceError> {
         // TODO: This needs to take a parent component_id to know where to put the document.
-        // TODO: Create a component
-        // TODO: Create a document
+        let project_id = req.project_id.clone();
+        let request = CreateDocumentRequest::new(project_id.into());
+        let result = self.repo.create_document(&request).await;
+        match result {
+            Ok(r) => Ok(r.into()),
+            Err(e) => Err(ServiceError::CreateDocumentError(e)),
+        }
+    }
+    async fn update_document_content(&self, req: &str) -> Result<(), ServiceError> {
+        print!("Updating document content: {}", req);
+        Ok(())
+    }
+    async fn save_document_changes(&self) -> Result<(), ServiceError> {
+        print!("Saving document changes");
         Ok(())
     }
 }

@@ -16,7 +16,7 @@ pub enum SqliteAdapterError {
 }
 
 #[derive(Clone, Debug)]
-struct SqliteAdapter {
+pub struct SqliteAdapter {
     pool: Arc<SqlitePool>,
 }
 

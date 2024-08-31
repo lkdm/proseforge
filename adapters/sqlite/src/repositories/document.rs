@@ -1,18 +1,21 @@
 use anyhow::Context;
 use anyhow::Result;
 use proseforge_common::Id;
+use proseforge_core::features::project::models::component::CreateComponentError;
+use proseforge_core::features::project::models::component::CreateComponentRequest;
+use proseforge_core::features::project::models::component::ProjectComponent;
 use proseforge_core::features::project::{
     models::document::{
         CreateDocumentError, CreateDocumentRequest, DeleteDocumentError, DeleteDocumentRequest,
         Document, GetDocumentError, GetDocumentRequest, UpdateDocumentError, UpdateDocumentRequest,
     },
-    ports::DocumentRepository,
+    ports::ProjectRepository,
 };
 use sqlx::{query, Row};
 
 use crate::SqliteAdapter;
 
-impl DocumentRepository for SqliteAdapter {
+impl ProjectRepository for SqliteAdapter {
     async fn create_document(
         &self,
         _req: &CreateDocumentRequest,
@@ -115,11 +118,145 @@ impl DocumentRepository for SqliteAdapter {
             Ok(())
         }
     }
+
+    // async fn create_component(
+    //     &self,
+    //     req: &CreateComponentRequest,
+    // ) -> Result<ProjectComponent, CreateComponentError> {
+    //     let pool = self.pool.clone();
+    //     let component = ProjectComponent::builder(req.project_id())
+    //         .with_kind(req.kind())
+    //         .with_display_order(req.display_order())
+    //         .with_title(Some(req.title()))
+    //         .with_summary(req.summary())
+    //         .with_parent_id(req.parent_id())
+    //         .with_document_id(req.document_id())
+    //         .build();
+
+    //     let row = query("
+    //             INSERT INTO component (id, kind, display_order, title, summary, project_id, parent_id, document_id, created_at, modified_at)
+    //             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+    //         ")
+    //         .bind::<String>(component.id().into())
+    //         .bind::<String>(component.kind().into())
+    //         .bind(component.display_order())
+    //         .bind::<String>(component.title().into())
+    //         .bind::<String>(component.summary().into())
+    //         .bind::<String>(component.project_id().into())
+    //         .bind::<Option<String>>(component.parent_id().map(|id| id.into()))
+    //         .bind::<Option<String>>(component.document_id().map(|id| id.into()))
+    //         .bind::<String>(component.created_at().into())
+    //         .bind::<String>(component.modified_at().into())
+    //         .fetch_one(&*pool)
+    //         .await
+    //         .map_err(|e| CreateComponentError::UnexpectedError(e.to_string()))?;
+
+    //     let id: String = row
+    //         .try_get("id")
+    //         .map_err(|e| CreateComponentError::UnexpectedError(e.to_string()))?;
+    //     Ok(ProjectComponent::builder(req.project_id())
+    //         .with_id(Id::from(id))
+    //         .build())
+    // }
+    // async fn get_component(
+    //     &self,
+    //     req: &GetComponentRequest,
+    // ) -> Result<ProjectComponent, GetComponentError> {
+    //     let pool = self.pool.clone();
+    //     let row = query("
+    //             SELECT id, kind, display_order, title, summary, project_id, parent_id, document_id, created_at, modified_at, deleted_at
+    //             FROM component
+    //             WHERE id = ?
+    //         ")
+    //         .bind::<String>(req.id().into())
+    //         .fetch_one(&*pool)
+    //         .await?;
+
+    //     let id: String = row.try_get("id")?;
+    //     let kind: String = row.try_get("kind")?;
+    //     let display_order: i32 = row.try_get("display_order")?;
+    //     let title: Option<String> = row.try_get("title")?;
+    //     let summary: Option<String> = row.try_get("summary")?;
+    //     let project_id: String = row.try_get("project_id")?;
+    //     let parent_id: Option<String> = row.try_get("parent_id")?;
+    //     let document_id: Option<String> = row.try_get("document_id")?;
+    //     let created_at: String = row.try_get("created_at")?;
+    //     let modified_at: String = row.try_get("modified_at")?;
+    //     let deleted_at: Option<String> = row.try_get("deleted_at")?;
+
+    //     let component = ProjectComponent::builder(project_id)
+    //         .with_id(id.into())
+    //         .with_kind(kind.into())
+    //         .with_display_order(display_order)
+    //         .with_title(title)
+    //         .with_summary(summary)
+    //         .with_parent_id(parent_id.map(|id| id.into()))
+    //         .with_document_id(document_id.map(|id| id.into()))
+    //         .with_created_at(created_at.into())
+    //         .with_modified_at(modified_at.into())
+    //         .with_deleted_at(deleted_at.map(|dt| dt.into()))
+    //         .build();
+
+    //     Ok(component)
+    // }
+    // async fn update_component(
+    //     &self,
+    //     req: &UpdateComponentRequest,
+    // ) -> Result<(), UpdateComponentError> {
+    //     let pool = self.pool.clone();
+    //     query("
+    //             UPDATE component
+    //             SET kind = ?, display_order = ?, title = ?, summary = ?, parent_id = ?, document_id = ?, modified_at = ?
+    //             WHERE id = ?
+    //         ")
+    //         .bind::<String>(req.kind().into())
+    //         .bind(req.display_order())
+    //         .bind::<Option<String>>(req.title().map(|t| t.into()))
+    //         .bind::<Option<String>>(req.summary().map(|s| s.into()))
+    //         .bind::<Option<String>>(req.parent_id().map(|id| id.into()))
+    //         .bind::<Option<String>>(req.document_id().map(|id| id.into()))
+    //         .bind::<String>(req.modified_at().into())
+    //         .bind::<String>(req.id().into())
+    //         .execute(&*pool)
+    //         .await
+    //         .map_err(|e| UpdateComponentError::UnexpectedError(e.to_string()))?;
+    //     Ok(())
+    // }
+
+    // async fn delete_component(
+    //     &self,
+    //     req: &DeleteComponentRequest,
+    // ) -> Result<(), DeleteComponentError> {
+    //     let pool = self.pool.clone();
+    //     let affected_rows = query(
+    //         "
+    //             UPDATE component
+    //             SET deleted_at = ?
+    //             WHERE id = ?
+    //         ",
+    //     )
+    //     .bind::<String>(req.deleted_at().into())
+    //     .bind::<String>(req.id().into())
+    //     .execute(&*pool)
+    //     .await?
+    //     .rows_affected();
+
+    //     if affected_rows == 0 {
+    //         Err(DeleteComponentError::UnexpectedError(
+    //             "Unexpected error".into(),
+    //         ))
+    //     } else {
+    //         Ok(())
+    //     }
+    // }
 }
 
 mod tests {
     use super::*;
     use anyhow::{Context, Result};
+    use proseforge_core::features::project::models::component::{
+        ComponentKind, DeleteComponentRequest, GetComponentRequest, UpdateComponentRequest,
+    };
     use sqlx::{query, SqlitePool};
     use tokio;
 
@@ -224,4 +361,71 @@ mod tests {
 
         Ok(())
     }
+
+    // #[tokio::test]
+    // async fn test_component_repository() -> Result<(), Box<dyn std::error::Error>> {
+    //     let adapter = setup().await?;
+    //     seed(adapter.clone()).await?;
+    //     // Create a component
+    //     let req = CreateComponentRequest::new(
+    //         project_id(),
+    //         ComponentKind::Note,
+    //         Some(String::from("Title").into()),
+    //         Some(String::from("Summary").into()),
+    //         None,
+    //         None,
+    //         0,
+    //     );
+    //     let res = adapter
+    //         .create_component(&req)
+    //         .await
+    //         .expect("Failed to create component.");
+
+    //     let id = res.id();
+
+    //     // Get the component
+    //     let req = GetComponentRequest::new(id.clone());
+    //     let component = adapter
+    //         .get_component(&req)
+    //         .await
+    //         .expect("Failed to get component.");
+    //     assert_eq!(component.project_id(), project_id());
+
+    //     // Update the component
+    //     let req = UpdateComponentRequest::new(
+    //         id.clone(),
+    //         Some("New Title".into()),
+    //         Some("New Summary".into()),
+    //         2,
+    //         None,
+    //         None,
+    //         "2022-01-01T00:00:00".into(),
+    //     );
+    //     adapter
+    //         .update_component(&req)
+    //         .await
+    //         .expect("Failed to update component.");
+
+    //     // Get component again to check if it was updated
+    //     let req = GetComponentRequest::new(id.clone());
+    //     let component = adapter
+    //         .get_component(&req)
+    //         .await
+    //         .expect("Failed to get component.");
+    //     assert_eq!(component.title().as_deref(), Some("New Title"));
+
+    //     // Soft-delete the component
+    //     let req = DeleteComponentRequest::new(id.clone(), "2022-01-01T00:00:00".into());
+    //     adapter
+    //         .delete_component(&req)
+    //         .await
+    //         .expect("Failed to delete component.");
+
+    //     // Check if the component was soft-deleted
+    //     let req = GetComponentRequest::new(id.into());
+    //     let component = adapter.get_component(&req).await;
+    //     assert!(component.unwrap().deleted_at().is_some());
+
+    //     Ok(())
+    // }
 }

@@ -12,7 +12,10 @@ use crate::features::project::models::document::GetDocumentRequest;
 ///
 /// It may also publish events or perform other side effects.
 ///
-use super::{models::document::CreateDocumentRequest, ports::ProjectRepository};
+use super::{
+    models::document::{CreateDocumentError, CreateDocumentRequest, GetDocumentError},
+    ports::ProjectRepository,
+};
 
 #[derive(Debug, Clone)]
 pub struct Service<R>
@@ -68,15 +71,15 @@ pub struct GetDocumentResponseDto {
     content: String,
 }
 
-#[derive(Debug, Error, Serialize, Deserialize)]
+#[derive(Debug, Error)]
 pub enum ServiceError {
-    #[error("Document creation failed")]
-    CreateDocumentError,
+    #[error("Document creation failed: {0}")]
+    CreateDocumentError(#[from] CreateDocumentError),
 
-    #[error("Document retrieval failed")]
-    GetDocumentError,
+    #[error("Document retrieval failed: {0}")]
+    GetDocumentError(#[from] GetDocumentError),
 
-    #[error("An unexpected error occurred")]
+    #[error("An unexpected error occurred: {0}")]
     UnexpectedError(String),
 }
 
@@ -93,7 +96,7 @@ where
         let result = self.repo.create_document(&request).await;
         match result {
             Ok(r) => Ok(r.into()),
-            Err(e) => Err(ServiceError::CreateDocumentError),
+            Err(e) => Err(ServiceError::CreateDocumentError(e)),
         }
     }
     async fn document_content_update(&self, req: &str) -> Result<(), ServiceError> {
@@ -117,7 +120,7 @@ where
                 id: r.id().into(),
                 content: r.content().into(),
             }),
-            Err(e) => Err(ServiceError::GetDocumentError),
+            Err(e) => Err(ServiceError::GetDocumentError(e)),
         }
     }
 }

@@ -6,6 +6,7 @@ version = 3
 name = "Proseforge"
 version = "0.0.0"
 dependencies = [
+ "anyhow",
  "cocoa 0.25.0",
  "proseforge_core",
  "proseforge_filesystem",

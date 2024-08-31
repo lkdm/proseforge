@@ -45,7 +45,11 @@ async fn handle_open_document(
         let state = state.lock().unwrap();
         state.project_service.clone()
     };
-    let dto = project_service.clone().document_get(&data).await?;
+    let dto = project_service
+        .clone()
+        .document_get(&data)
+        .await?
+        .context("Failed to get document")?;
     Ok(dto)
 }
 

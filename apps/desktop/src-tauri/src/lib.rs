@@ -7,6 +7,8 @@ use proseforge_core::features::project::services::ServiceError;
 use proseforge_core::features::project::services::StatefulService;
 use proseforge_core::features::project::services::UpdateDocumentRequestDto;
 use proseforge_core::{Node, NodeError};
+use proseforge_dialogs::request_open_path_dialog;
+use proseforge_dialogs::request_save_path_dialog;
 use proseforge_sqlite::SqliteAdapter;
 use std::sync::{Arc, Mutex};
 use tauri::menu::{AboutMetadataBuilder, MenuBuilder, MenuItemBuilder, SubmenuBuilder};
@@ -21,6 +23,28 @@ type AppState = Node<StatefulService<SqliteAdapter>>;
 #[derive(Clone, serde::Serialize)]
 struct Payload {
     message: String,
+}
+
+#[tauri::command]
+async fn handle_new_project(
+    app: AppHandle,
+    state: State<'_, Arc<AppState>>,
+) -> Result<(), NodeError> {
+    let path = request_save_path_dialog(None);
+    Ok(())
+    // let project_service = state.project_service.clone();
+    // project_service.project_create(&data).await
+}
+
+#[tauri::command]
+async fn handle_open_project(
+    app: AppHandle,
+    state: State<'_, Arc<AppState>>,
+) -> Result<(), NodeError> {
+    let path = request_open_path_dialog(None);
+    Ok(())
+    // let project_service = state.project_service.clone();
+    // project_service.project_create(&data).await
 }
 
 #[tauri::command]
@@ -178,15 +202,14 @@ pub async fn run() {
 
             // We need a the app handle to determine the data directory now.
             // This means all the setup code has to be within `setup`, however it doesn't support async so we `block_on`.
-            block_in_place(|| {
+            let node = Arc::new(block_in_place(|| {
                 block_on(async move {
                     let sqlite_adapter = SqliteAdapter::new("sqlite::memory:").await.unwrap();
                     let service = StatefulService::new(sqlite_adapter);
-                    let node = Node::new(service.clone());
-                    handle.manage(node.clone());
+                    Node::new(service.clone())
                 })
-            });
-
+            })?);
+            handle.manage(node);
             // let config = Config::default();
 
             // Tauri-specific
@@ -242,12 +265,16 @@ pub async fn run() {
             // Events
 
             handle.on_menu_event(move |handle, event| {
-                // if event.id() == "NEW" {
-                //     block_on(handle_new_document(handle.clone(), handle.state())).unwrap();
-                // }
-                // if event.id() == "OPEN" {
-                //     block_on(handle_open_document(handle.clone(), handle.state())).unwrap();
-                // }
+                if event.id() == "NEW" {
+                    block_in_place(|| {
+                        block_on(handle_new_project(handle.clone(), handle.state())).unwrap()
+                    });
+                }
+                if event.id() == "OPEN" {
+                    block_in_place(|| {
+                        block_on(handle_open_project(handle.clone(), handle.state())).unwrap();
+                    });
+                }
                 if event.id() == "SAVE" {
                     todo!("Got to get content from memory here.")
                     // block_on(handle_save_document(handle.state())).unwrap();
@@ -291,6 +318,8 @@ pub async fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
+            handle_new_project,
+            handle_open_project,
             handle_new_document,
             handle_open_document,
             handle_save_document,

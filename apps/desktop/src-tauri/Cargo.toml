@@ -28,6 +28,7 @@ strip = true
 proseforge_core = { path = "../../../core" }
 proseforge_filesystem = { path = "../../../adapters/file_system" }
 proseforge_sqlite = { path = "../../../adapters/sqlite" }
+proseforge_dialogs = { path = "../../../crates/dialogs" }
 tauri = { version = "2.0.0-rc", features = [] }
 tauri-plugin-shell = "2.0.0-rc"
 serde = { version = "1", features = ["derive"] }

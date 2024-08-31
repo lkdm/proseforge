@@ -9,6 +9,7 @@ dependencies = [
  "anyhow",
  "cocoa 0.25.0",
  "proseforge_core",
+ "proseforge_dialogs",
  "proseforge_filesystem",
  "proseforge_sqlite",
  "serde",
@@ -3205,6 +3206,13 @@ dependencies = [
  "strum_macros",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "proseforge_dialogs"
+version = "0.1.0"
+dependencies = [
+ "rfd",
 ]
 
 [[package]]

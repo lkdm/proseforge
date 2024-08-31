@@ -49,10 +49,7 @@ pub trait ProjectRepository: Clone + Send + Sync + 'static {
         &self,
         req: &ListProjectsRequest,
     ) -> impl Future<Output = Result<Vec<Project>, ListProjectsError>> + Send;
-}
 
-/// ComponentRepository
-pub trait ComponentRepository: Clone + Send + Sync + 'static {
     /// Creates new component in the repository.
     fn create_component(
         &self,
@@ -82,10 +79,7 @@ pub trait ComponentRepository: Clone + Send + Sync + 'static {
         &self,
         req: &ListComponentRequest,
     ) -> impl Future<Output = Result<Vec<ProjectComponent>, ListComponentError>> + Send;
-}
 
-/// DocumentRepository
-pub trait DocumentRepository: Clone + Send + Sync + 'static {
     /// Creates new content in the repository.
     fn create_document(
         &self,

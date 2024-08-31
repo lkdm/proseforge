@@ -1,7 +1,11 @@
+pub mod api;
 pub mod features;
 pub mod node;
 
-use features::project::ports::{ComponentRepository, DocumentRepository, ProjectRepository};
+use features::project::{
+    ports::{ComponentRepository, DocumentRepository, ProjectRepository},
+    services::ProjectService,
+};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use thiserror::Error;
@@ -12,14 +16,11 @@ use thiserror::Error;
 /// Also provides high-level handlers for dealing with the repositories.
 pub struct Node<
     PR: ProjectRepository,
-    CR: ComponentRepository,
-    DR: DocumentRepository,
+    PS: ProjectService,
     // CFG: ConfigRepository,
 > {
     pub project_repo: Arc<PR>,
-    pub component_repo: Arc<CR>,
-    pub document_repo: Arc<DR>,
-    // pub config_repo: Arc<CFG>,
+    pub project_service: Arc<PS>,
 }
 
 #[derive(Debug, Error, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -28,24 +29,11 @@ pub enum NodeError {
     RepositoryError,
 }
 
-impl<
-        PR: ProjectRepository,
-        CR: ComponentRepository,
-        DR: DocumentRepository,
-        // CFG: NodeConfigRepository,
-    > Node<PR, CR, DR>
-{
-    pub fn new(
-        project_repo: PR,
-        component_repo: CR,
-        document_repo: DR,
-        // config_repo: CFG,
-    ) -> Result<Self, NodeError> {
+impl<PR: ProjectRepository, PS: ProjectService> Node<PR, PS> {
+    pub fn new(project_repo: PR, project_service: PS) -> Result<Self, NodeError> {
         let node = Node {
             project_repo: Arc::new(project_repo),
-            component_repo: Arc::new(component_repo),
-            document_repo: Arc::new(document_repo),
-            // config_repo: Arc::new(config_repo),
+            project_service: Arc::new(project_service),
         };
         return Ok(node);
     }

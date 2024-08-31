@@ -12,10 +12,7 @@ use crate::features::project::models::document::GetDocumentRequest;
 ///
 /// It may also publish events or perform other side effects.
 ///
-use super::{
-    models::document::{CreateDocumentError, CreateDocumentRequest, GetDocumentError},
-    ports::ProjectRepository,
-};
+use super::{models::document::CreateDocumentRequest, ports::ProjectRepository};
 
 #[derive(Debug, Clone)]
 pub struct Service<R>
@@ -65,6 +62,7 @@ pub struct GetDocumentRequestDto {
     id: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GetDocumentResponseDto {
     id: String,
     content: String,

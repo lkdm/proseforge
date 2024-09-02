@@ -1,11 +1,11 @@
 use derive_more::derive::{Deref, From};
-use proseforge_common::Id;
 use std::{cmp::Ordering, error::Error};
 use thiserror::Error;
 
-use crate::node::Timestamp;
-
-use super::Title;
+use crate::{
+    editor::Title,
+    types::{Id, Timestamp},
+};
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From, strum_macros::EnumString)]
 #[strum(serialize_all = "lowercase")]

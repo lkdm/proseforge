@@ -5,7 +5,6 @@ edition = "2021"
 
 [dependencies]
 proseforge_core = { path = "../../core" }
-proseforge_common = { path = "../../crates/common" }
 thiserror = "1.0.63"
 rfd = "0.14.1"
 chrono = { version = "0.4.38", features = ["serde"] }

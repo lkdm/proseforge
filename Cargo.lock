@@ -3184,22 +3184,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "proseforge_common"
-version = "0.1.0"
-dependencies = [
- "derive_more 1.0.0",
- "rusty_ulid",
- "thiserror",
-]
-
-[[package]]
 name = "proseforge_core"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "chrono",
  "derive_more 1.0.0",
- "proseforge_common",
+ "rusty_ulid",
  "serde",
  "sqlx",
  "strum",
@@ -3230,7 +3221,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "chrono",
- "proseforge_common",
  "proseforge_core",
  "rfd",
  "sqlx",

@@ -1,7 +1,6 @@
-pub mod features;
-pub mod node;
-
-use features::project::services::ProjectService;
+pub mod editor;
+pub mod types;
+use editor::document::services::DocumentService;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use thiserror::Error;
@@ -11,10 +10,10 @@ use thiserror::Error;
 ///
 /// Also provides high-level handlers for dealing with the repositories.
 pub struct Node<
-    PS: ProjectService,
+    DS: DocumentService,
     // CFG: ConfigRepository,
 > {
-    pub project_service: Arc<PS>,
+    pub document_service: Arc<DS>,
 }
 
 #[derive(Debug, Error, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -23,10 +22,10 @@ pub enum NodeError {
     RepositoryError,
 }
 
-impl<PS: ProjectService> Node<PS> {
-    pub fn new(project_service: PS) -> Result<Self, NodeError> {
+impl<DS: DocumentService> Node<DS> {
+    pub fn new(project_service: DS) -> Result<Self, NodeError> {
         let node = Node {
-            project_service: Arc::new(project_service),
+            document_service: Arc::new(project_service),
         };
         return Ok(node);
     }

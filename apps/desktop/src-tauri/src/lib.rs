@@ -1,15 +1,12 @@
-use proseforge_core::features::project::models::document::CreateDocumentRequest;
-use proseforge_core::features::project::services::CreateDocumentRequestDto;
-use proseforge_core::features::project::services::GetDocumentRequestDto;
-use proseforge_core::features::project::services::GetDocumentResponseDto;
-use proseforge_core::features::project::services::ProjectService;
-use proseforge_core::features::project::services::ServiceError;
-use proseforge_core::features::project::services::StatefulService;
-use proseforge_core::features::project::services::UpdateDocumentRequestDto;
+use proseforge_core::editor::document::services::{
+    CreateDocumentRequestDto, DocumentService, GetDocumentRequestDto, GetDocumentResponseDto,
+    Service, ServiceError, UpdateDocumentRequestDto,
+};
 use proseforge_core::{Node, NodeError};
 use proseforge_dialogs::request_open_path_dialog;
 use proseforge_dialogs::request_save_path_dialog;
 use proseforge_sqlite::SqliteAdapter;
+use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use tauri::menu::{AboutMetadataBuilder, MenuBuilder, MenuItemBuilder, SubmenuBuilder};
 use tauri::State;
@@ -17,12 +14,17 @@ use tauri::{async_runtime::block_on, TitleBarStyle, WebviewUrl, WebviewWindowBui
 use tauri::{AppHandle, Emitter, Manager};
 use tokio::task::block_in_place;
 
-type AppState = Node<StatefulService<SqliteAdapter>>;
+type AppState = Node<Service<SqliteAdapter>>;
 
 // the payload type must implement `Serialize` and `Clone`.
-#[derive(Clone, serde::Serialize)]
+#[derive(Clone, Serialize)]
 struct Payload {
     message: String,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+struct NewProjectDto {
+    unsaved_changes: bool,
 }
 
 #[tauri::command]
@@ -31,9 +33,12 @@ async fn handle_new_project(
     state: State<'_, Arc<AppState>>,
 ) -> Result<(), NodeError> {
     let path = request_save_path_dialog(None);
-    Ok(())
+    // if data.unsaved_changes {
+    //     let path = request_save_path_dialog(None);
+    // }
     // let project_service = state.project_service.clone();
     // project_service.project_create(&data).await
+    Ok(())
 }
 
 #[tauri::command]
@@ -53,11 +58,11 @@ async fn handle_new_document(
     app: AppHandle,
     state: tauri::State<'_, Mutex<AppState>>,
 ) -> Result<(), NodeError> {
-    let project_service = {
+    let document_service = {
         let state = state.lock().unwrap();
-        state.project_service.clone()
+        state.document_service.clone()
     };
-    project_service.document_create(&data);
+    document_service.document_create(&data);
     Ok(())
 }
 
@@ -67,8 +72,8 @@ async fn handle_open_document(
     app: tauri::AppHandle,
     state: State<'_, Arc<AppState>>,
 ) -> Result<GetDocumentResponseDto, ServiceError> {
-    let project_service = state.project_service.clone();
-    project_service.document_get(&data).await
+    let document_service = state.document_service.clone();
+    document_service.document_get(&data).await
 }
 
 #[tauri::command]
@@ -77,8 +82,8 @@ async fn handle_save_document(
     app: tauri::AppHandle,
     state: State<'_, Arc<AppState>>,
 ) -> Result<(), ServiceError> {
-    let project_service = state.project_service.clone();
-    project_service.document_update(&data).await
+    let document_service = state.document_service.clone();
+    document_service.document_update(&data).await
 }
 
 // #[tauri::command]
@@ -205,7 +210,7 @@ pub async fn run() {
             let node = Arc::new(block_in_place(|| {
                 block_on(async move {
                     let sqlite_adapter = SqliteAdapter::new("sqlite::memory:").await.unwrap();
-                    let service = StatefulService::new(sqlite_adapter);
+                    let service = Service::new(sqlite_adapter);
                     Node::new(service.clone())
                 })
             })?);
@@ -276,6 +281,7 @@ pub async fn run() {
                     });
                 }
                 if event.id() == "SAVE" {
+                    // TODO: Send an event to the webview to update the document.
                     todo!("Got to get content from memory here.")
                     // block_on(handle_save_document(handle.state())).unwrap();
                 }

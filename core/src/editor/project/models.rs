@@ -1,9 +1,8 @@
 use derive_more::derive::From;
-use proseforge_common::Id;
 use std::error::Error;
 use thiserror::Error;
 
-use super::Title;
+use crate::{editor::Title, types::Id};
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From, strum_macros::EnumString)]
 #[strum(serialize_all = "lowercase")]
@@ -37,18 +36,19 @@ pub struct Project {
     id: Id,
     title: Title,
     kind: ProjectKind,
-    components: Vec<Id>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
 pub struct UpdateProjectRequest {
     id: Id,
-    content: String,
+    title: Title,
+    kind: ProjectKind,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]
 pub struct CreateProjectRequest {
-    content: Option<String>,
+    title: Title,
+    kind: ProjectKind,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From)]

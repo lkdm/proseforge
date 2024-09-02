@@ -1,10 +1,14 @@
 use std::{future::Future, sync::Arc};
 
-use proseforge_common::Id;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::features::project::models::document::GetDocumentRequest;
+use crate::{editor::document::models::GetDocumentRequest, types::Id};
+
+use super::{
+    models::{CreateDocumentRequest, UpdateDocumentRequest},
+    ports::DocumentRepository,
+};
 
 ///
 /// Service contains functions that more directly relate to the business logic of the application.
@@ -12,36 +16,30 @@ use crate::features::project::models::document::GetDocumentRequest;
 ///
 /// It may also publish events or perform other side effects.
 ///
-use super::{
-    models::document::{
-        CreateDocumentError, CreateDocumentRequest, GetDocumentError, UpdateDocumentRequest,
-    },
-    ports::ProjectRepository,
-};
-
-/// # StatefulService
-///
-/// Holds state in memory. Used for client-facing services, such as desktop or web applications.
 #[derive(Debug, Clone)]
-pub struct StatefulService<R>
+pub struct Service<R>
 where
-    R: ProjectRepository,
+    R: DocumentRepository,
+    // M: AuthorMetrics,
+    // N: AuthorNotifier,
 {
-    repo: Arc<R>,
+    repo: R,
+    // metrics: M,
+    // notifier: N,
 }
 
-impl<R> StatefulService<R>
+impl<R> Service<R>
 where
-    R: ProjectRepository,
+    R: DocumentRepository,
+    // M: SomeMetricsTrait,
+    // N: SomeNotifierTrait,
 {
     pub fn new(repo: R) -> Self {
-        StatefulService {
-            repo: Arc::new(repo),
-        }
+        Service { repo }
     }
 }
 
-pub trait ProjectService {
+pub trait DocumentService {
     fn document_create(
         &self,
         req: &CreateDocumentRequestDto,
@@ -80,6 +78,12 @@ pub struct GetDocumentResponseDto {
     content: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CreateProjectRequestDto {
+    title: String,
+    kind: String,
+}
+
 #[derive(Debug, Serialize, Error)]
 #[error("Application error")]
 pub struct ServiceError(String);
@@ -89,9 +93,9 @@ impl From<anyhow::Error> for ServiceError {
     }
 }
 
-impl<R> ProjectService for StatefulService<R>
+impl<R> DocumentService for Service<R>
 where
-    R: ProjectRepository,
+    R: DocumentRepository,
 {
     /// Create a new document in the project.
     /// This creates a new component and document in the project, and returns the component id.
@@ -119,7 +123,6 @@ where
         print!("Getting document: {}", req.id);
 
         let request = GetDocumentRequest::new(req.id.clone().into());
-        let result = self.repo.get_document(&request).await;
         self.repo
             .get_document(&request)
             .await

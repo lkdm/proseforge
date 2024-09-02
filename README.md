@@ -21,9 +21,16 @@ Proseforge uses Rust, React, Typescript, Tailwind, and Tauri.
 
 - `desktop` - A [Tauri](https://v2.tauri.app/) app.
 
-### Core:
+### Core
 
-- `core`: The Rust core. Cross-platform core of the application that provides the main functionality.
+The core module provides the fundamental functionality of the application, organised into major features.
+
+- **Top-level directories**: Each directory under core represents a major feature of the application.
+- **Feature subdirectories**: Each major feature directory contains subdirectories named after the main data types of that feature.
+    - **TYPE.rs files**: Define the primary data types and validation logic.
+    - **TYPE/models.rs**: Contains the data structures, including any associated types and validation rules.
+    - **TYPE/ports.rs**: Defines the interfaces and abstractions for interactions related to the feature.
+    - **TYPE/services.rs**: Implements the business logic and service layer for managing and manipulating the data.
 
 ### Interface:
 

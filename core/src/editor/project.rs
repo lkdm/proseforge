@@ -6,6 +6,7 @@ use super::Title;
 
 pub mod models;
 pub mod ports;
+pub mod services;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From, strum_macros::EnumString)]
 #[strum(serialize_all = "lowercase")]

@@ -32,6 +32,13 @@ The core module provides the fundamental functionality of the application, organ
     - **TYPE/ports.rs**: Defines the interfaces and abstractions for interactions related to the feature.
     - **TYPE/services.rs**: Implements the business logic and service layer for managing and manipulating the data.
 
+### Adapters
+
+Adapters are responsible for implementing the ports defined in the core module, they are what the application uses for data persistence.
+
+- **file_system**: An adapter for reading and writing files to the local filesystem.
+- **sqlite**: An adapter for reading and writing data to an SQLite database.
+
 ### Interface:
 
 - `interface`: The shared React component library.

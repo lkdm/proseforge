@@ -1,4 +1,8 @@
-
+use std::future::Future;
+use super::{
+    models::{CreateDocumentRequest, UpdateDocumentRequest},
+    ports::ProjectRepository,
+};
 
 ///
 /// Service contains functions that more directly relate to the business logic of the application.
@@ -7,10 +11,10 @@
 /// It may also publish events or perform other side effects.
 ///
 #[derive(Debug, Clone)]
-pub struct DesktopService<R>
+pub struct Service<LHS, RHS>
 where
-    R: ProjectRepository,
-    F: ProjectRepository,
+    LHS: ProjectRepository,
+    RHS: ProjectRepository,
     // M: AuthorMetrics,
     // N: AuthorNotifier,
 {

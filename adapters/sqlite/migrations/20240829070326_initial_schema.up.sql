@@ -18,20 +18,31 @@ CREATE TABLE IF NOT EXISTS component (
     display_order INTEGER NOT NULL DEFAULT 0 CHECK (display_order >= 0),
 
     title TEXT,
-    summary TEXT,
 
     project_id BLOB NOT NULL,
-    parent_id BLOB, -- null, if it's a root node
+    path TEXT NOT NULL, -- e.g., "/root/parent/child"
+
     document_id BLOB, -- null, if it's a directory
+    summary_id BLOB,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     deleted_at TIMESTAMP,
 
     UNIQUE (document_id), -- A document can only be owned by one component.
-    FOREIGN KEY (parent_id) REFERENCES component(id) ON DELETE CASCADE,
+    UNIQUE (summary_id), -- A summary can only be owned by one component.
     FOREIGN KEY (document_id) REFERENCES document(id) ON DELETE SET NULL, -- If a document is deleted, the component turns into a directory.
+    FOREIGN KEY (summary_id) REFERENCES component_summary(id) ON DELETE SET NULL,
     FOREIGN KEY (project_id) REFERENCES project(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS component_summary (
+    id BLOB PRIMARY KEY,
+    content TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    deleted_at TIMESTAMP,
 );
 
 -- A document is anything that can be consumed by the editor.
@@ -40,6 +51,7 @@ CREATE TABLE IF NOT EXISTS document (
     project_id BLOB NOT NULL,
 
     content TEXT,
+    word_count INTEGER NOT NULL DEFAULT 0 CHECK (word_count >= 0),
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,

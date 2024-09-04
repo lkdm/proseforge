@@ -12,6 +12,49 @@ pub mod ports;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From, strum_macros::EnumString)]
 #[strum(serialize_all = "lowercase")]
+enum RootLevelCategory {
+    Drafts,
+    Notes,
+}
+
+/// The path to a component.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+struct CategorisedPath {
+    category: RootLevelCategory,
+    path_ids: Vec<Id>
+}
+
+impl CategorisedPath {
+    // Constructor for creating a new CategorisedPath
+    pub fn new(category: RootLevelCategory, path_ids: Vec<Id>) -> Self {
+        CategorisedPath { category, path_ids }
+    }
+
+    // Get the category
+    pub fn category(&self) -> &RootLevelCategory {
+        &self.category
+    }
+
+    // Get the path ids
+    pub fn path_ids(&self) -> &Vec<Id> {
+        &self.path_ids
+    }
+
+    // Convert CategorisedPath to a string representation
+    pub fn to_string(&self) -> String {
+        let path_str: Vec<String> = self.path_ids.iter().map(|id| id.to_string()).collect();
+        format!("{:?}:{}", self.category, path_str.join("/"))
+    }
+}
+
+impl Display for CategorisedPath {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{}", self.to_string())
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From, strum_macros::EnumString)]
+#[strum(serialize_all = "lowercase")]
 pub enum ComponentKind {
     Draft,
     Part,
@@ -73,12 +116,12 @@ pub struct ProjectComponent {
     id: Id,
     kind: ComponentKind,
     display_order: u32,
+    path: CategorisedPath,
 
     title: Title,
     summary: Option<Summary>,
 
     project_id: Id,
-    parent_id: Option<Id>,
     document_id: Option<Id>,
 
     created_at: Timestamp,

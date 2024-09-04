@@ -63,25 +63,25 @@ pub struct CreateDocumentRequestDto {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GetDocumentRequestDto {
-    id: String,
+    pub id: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UpdateDocumentRequestDto {
-    id: String,
-    content: String,
+    pub id: String,
+    pub content: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GetDocumentResponseDto {
-    id: String,
-    content: String,
+    pub id: String,
+    pub content: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateProjectRequestDto {
-    title: String,
-    kind: String,
+    pub title: String,
+    pub kind: String,
 }
 
 #[derive(Debug, Serialize, Error)]

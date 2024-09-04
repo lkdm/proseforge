@@ -7,6 +7,7 @@ use proseforge_dialogs::request_open_path_dialog;
 use proseforge_dialogs::request_save_path_dialog;
 use proseforge_sqlite::SqliteAdapter;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use std::sync::{Arc, Mutex};
 use tauri::menu::{AboutMetadataBuilder, MenuBuilder, MenuItemBuilder, SubmenuBuilder};
 use tauri::State;
@@ -53,38 +54,76 @@ async fn handle_open_project(
 }
 
 #[tauri::command]
-async fn handle_new_document(
-    data: CreateDocumentRequestDto,
-    app: AppHandle,
-    state: tauri::State<'_, Mutex<AppState>>,
-) -> Result<(), NodeError> {
-    let document_service = {
-        let state = state.lock().unwrap();
-        state.document_service.clone()
-    };
-    document_service.document_create(&data);
-    Ok(())
+async fn handle_document_action(
+    action: String,
+    data: serde_json::Value,
+    state: State<'_, Arc<AppState>>,
+) -> Result<serde_json::Value, String> {
+    let document_service = state.document_service.clone();
+    match action.as_str() {
+        "create" => {
+            let req: CreateDocumentRequestDto =
+                serde_json::from_value(data).map_err(|e| e.to_string())?;
+            let result = document_service.document_create(&req).await;
+            result
+                .map(|id| json!({ "id": id.to_string() }))
+                .map_err(|e| e.to_string())
+        }
+        "update" => {
+            let req: UpdateDocumentRequestDto =
+                serde_json::from_value(data).map_err(|e| e.to_string())?;
+            let result = document_service.document_update(&req).await;
+            result
+                .map(|_| json!({ "status": "success" }))
+                .map_err(|e| e.to_string())
+        }
+        "get" => {
+            let req: GetDocumentRequestDto =
+                serde_json::from_value(data).map_err(|e| e.to_string())?;
+            let result = document_service.document_get(&req).await;
+            result
+                .map(
+                    |res| json!({ "id": res.id().to_string(), "content": res.content().to_string() }),
+                )
+                .map_err(|e| e.to_string())
+        }
+        _ => Err("Unknown action".to_string()),
+    }
 }
 
-#[tauri::command]
-async fn handle_open_document(
-    data: GetDocumentRequestDto,
-    app: tauri::AppHandle,
-    state: State<'_, Arc<AppState>>,
-) -> Result<GetDocumentResponseDto, ServiceError> {
-    let document_service = state.document_service.clone();
-    document_service.document_get(&data).await
-}
+// #[tauri::command]
+// async fn handle_new_document(
+//     data: CreateDocumentRequestDto,
+//     app: AppHandle,
+//     state: tauri::State<'_, Mutex<AppState>>,
+// ) -> Result<(), NodeError> {
+//     let document_service = {
+//         let state = state.lock().unwrap();
+//         state.document_service.clone()
+//     };
+//     document_service.document_create(&data);
+//     Ok(())
+// }
 
-#[tauri::command]
-async fn handle_save_document(
-    data: UpdateDocumentRequestDto,
-    app: tauri::AppHandle,
-    state: State<'_, Arc<AppState>>,
-) -> Result<(), ServiceError> {
-    let document_service = state.document_service.clone();
-    document_service.document_update(&data).await
-}
+// #[tauri::command]
+// async fn handle_open_document(
+//     data: GetDocumentRequestDto,
+//     app: tauri::AppHandle,
+//     state: State<'_, Arc<AppState>>,
+// ) -> Result<GetDocumentResponseDto, ServiceError> {
+//     let document_service = state.document_service.clone();
+//     document_service.document_get(&data).await
+// }
+
+// #[tauri::command]
+// async fn handle_save_document(
+//     data: UpdateDocumentRequestDto,
+//     app: tauri::AppHandle,
+//     state: State<'_, Arc<AppState>>,
+// ) -> Result<(), ServiceError> {
+//     let document_service = state.document_service.clone();
+//     document_service.document_update(&data).await
+// }
 
 // #[tauri::command]
 // async fn handle_update_content(
@@ -326,9 +365,7 @@ pub async fn run() {
         .invoke_handler(tauri::generate_handler![
             handle_new_project,
             handle_open_project,
-            handle_new_document,
-            handle_open_document,
-            handle_save_document,
+            handle_document_action,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

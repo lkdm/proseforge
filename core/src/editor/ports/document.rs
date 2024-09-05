@@ -1,15 +1,16 @@
 ///
 /// Ports are the interfaces that the application uses to interact with the outside world.
 use crate::{
-    editor::document::models::{
-        CreateDocumentError, CreateDocumentRequest, DeleteDocumentError, DeleteDocumentRequest,
-        GetDocumentError, GetDocumentRequest, UpdateDocumentError, UpdateDocumentRequest,
+    editor::{
+        models::document::Document,
+        models::document::{
+            CreateDocumentError, CreateDocumentRequest, DeleteDocumentError, DeleteDocumentRequest,
+            GetDocumentError, GetDocumentRequest, UpdateDocumentError, UpdateDocumentRequest,
+        },
     },
     types::Id,
 };
 use std::future::Future;
-
-use super::Document;
 
 /// ProjectRepository
 pub trait DocumentRepository: Clone + Send + Sync + 'static {

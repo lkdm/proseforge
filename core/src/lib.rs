@@ -1,6 +1,6 @@
 pub mod editor;
 pub mod types;
-use editor::document::services::DocumentService;
+use editor::services::document::DocumentService;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use thiserror::Error;

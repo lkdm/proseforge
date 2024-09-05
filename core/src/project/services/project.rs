@@ -1,8 +1,8 @@
-use std::future::Future;
 use super::{
     models::{CreateDocumentRequest, UpdateDocumentRequest},
     ports::ProjectRepository,
 };
+use std::future::Future;
 
 ///
 /// Service contains functions that more directly relate to the business logic of the application.
@@ -15,12 +15,8 @@ pub struct Service<LHS, RHS>
 where
     LHS: ProjectRepository,
     RHS: ProjectRepository,
-    // M: AuthorMetrics,
-    // N: AuthorNotifier,
 {
     repo: R,
-    // metrics: M,
-    // notifier: N,
 }
 
 impl<R> DesktopService<R>

@@ -1,12 +1,12 @@
 use anyhow::Result;
 use proseforge_core::{
-    editor::document::{
-        models::{
+    editor::{
+        models::document::{
             CreateDocumentError, CreateDocumentRequest, DeleteDocumentError, DeleteDocumentRequest,
-            GetDocumentError, GetDocumentRequest, UpdateDocumentError, UpdateDocumentRequest,
+            Document, GetDocumentError, GetDocumentRequest, UpdateDocumentError,
+            UpdateDocumentRequest,
         },
-        ports::DocumentRepository,
-        Document,
+        ports::document::DocumentRepository,
     },
     types::Id,
 };

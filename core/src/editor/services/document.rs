@@ -3,11 +3,12 @@ use std::{future::Future, sync::Arc};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::{editor::document::models::GetDocumentRequest, types::Id};
-
-use super::{
-    models::{CreateDocumentRequest, UpdateDocumentRequest},
-    ports::DocumentRepository,
+use crate::{
+    editor::{
+        models::document::{CreateDocumentRequest, GetDocumentRequest, UpdateDocumentRequest},
+        ports::document::DocumentRepository,
+    },
+    types::Id,
 };
 
 ///

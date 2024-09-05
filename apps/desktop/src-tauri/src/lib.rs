@@ -1,4 +1,4 @@
-use proseforge_core::editor::document::services::{
+use proseforge_core::editor::services::document::{
     CreateDocumentRequestDto, DocumentService, GetDocumentRequestDto, GetDocumentResponseDto,
     Service, ServiceError, UpdateDocumentRequestDto,
 };
@@ -16,12 +16,6 @@ use tauri::{AppHandle, Emitter, Manager};
 use tokio::task::block_in_place;
 
 type AppState = Node<Service<SqliteAdapter>>;
-
-// the payload type must implement `Serialize` and `Clone`.
-#[derive(Clone, Serialize)]
-struct Payload {
-    message: String,
-}
 
 #[derive(Clone, Serialize, Deserialize)]
 struct NewProjectDto {
@@ -82,9 +76,7 @@ async fn handle_document_action(
                 serde_json::from_value(data).map_err(|e| e.to_string())?;
             let result = document_service.document_get(&req).await;
             result
-                .map(
-                    |res| json!({ "id": res.id().to_string(), "content": res.content().to_string() }),
-                )
+                .map(|res| json!({ "id": res.id, "content": res.content.to_string() }))
                 .map_err(|e| e.to_string())
         }
         _ => Err("Unknown action".to_string()),
@@ -338,25 +330,25 @@ pub async fn run() {
             let window = win_builder.build().unwrap();
 
             // set background color only when building for macOS
-            #[cfg(target_os = "macos")]
-            {
-                use cocoa::appkit::{NSColor, NSWindow};
-                use cocoa::base::{id, nil};
+            // #[cfg(target_os = "macos")]
+            // {
+            //     use cocoa::appkit::{NSColor, NSWindow};
+            //     use cocoa::base::{id, nil};
 
-                let ns_window = window.ns_window().unwrap() as id;
-                // unsafe {
-                //     let bg_colour = match config.theme {
-                //         Theme::Light => NSColor::colorWithRed_green_blue_alpha_(
-                //             nil, 0.9294, 0.9294, 0.9098, 1.0,
-                //         ),
-                //         Theme::Dark => NSColor::colorWithRed_green_blue_alpha_(
-                //             nil, 0.1529, 0.1451, 0.1529, 1.0,
-                //         ),
-                //         _ => NSColor::colorWithRed_green_blue_alpha_(nil, 1.0, 1.0, 1.0, 1.0),
-                //     };
-                //     ns_window.setBackgroundColor_(bg_colour);
-                // }
-            }
+            //     // let ns_window = window.ns_window().unwrap() as id;
+            //     // unsafe {
+            //     //     let bg_colour = match config.theme {
+            //     //         Theme::Light => NSColor::colorWithRed_green_blue_alpha_(
+            //     //             nil, 0.9294, 0.9294, 0.9098, 1.0,
+            //     //         ),
+            //     //         Theme::Dark => NSColor::colorWithRed_green_blue_alpha_(
+            //     //             nil, 0.1529, 0.1451, 0.1529, 1.0,
+            //     //         ),
+            //     //         _ => NSColor::colorWithRed_green_blue_alpha_(nil, 1.0, 1.0, 1.0, 1.0),
+            //     //     };
+            //     //     ns_window.setBackgroundColor_(bg_colour);
+            //     // }
+            // }
 
             Ok(())
         })

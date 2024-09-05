@@ -21,7 +21,7 @@ function App() {
 
   async function getConfig() {
     try {
-      const config = await invoke<Config>("get_config");
+      const config = await invoke<Config>("handle_config_action", { action: "get" });
       setConfig({
         ...config,
         theme: config.theme.toLowerCase() as Config['theme'],

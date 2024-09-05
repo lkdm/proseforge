@@ -48,6 +48,37 @@ async fn handle_open_project(
 }
 
 #[tauri::command]
+async fn handle_config_action(
+    action: String,
+    data: Option<serde_json::Value>,
+    state: State<'_, Arc<AppState>>,
+) -> Result<serde_json::Value, String> {
+    // let config_service = state.config_service.clone();
+    print!("{}", action);
+    match action.as_str() {
+        "get" => {
+            // let req: GetConfigRequestDto =
+            //     serde_json::from_value(data).map_err(|e| e.to_string())?;
+            // let result = config_service.config_get(&req).await;
+            // result.map_err(|e| e.to_string())
+            Ok(json!({
+                "theme": "dark"
+            }))
+        }
+        "set" => {
+            // let req: SetConfigRequestDto =
+            //     serde_json::from_value(data).map_err(|e| e.to_string())?;
+            // let result = config_service.config_set(&req).await;
+            // result.map_err(|e| e.to_string())
+            Ok(json!({
+                "status": "success"
+            }))
+        }
+        _ => Err("Invalid action".to_string()),
+    }
+}
+
+#[tauri::command]
 async fn handle_document_action(
     action: String,
     data: serde_json::Value,
@@ -358,6 +389,7 @@ pub async fn run() {
             handle_new_project,
             handle_open_project,
             handle_document_action,
+            handle_config_action,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

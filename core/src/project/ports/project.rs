@@ -2,13 +2,10 @@
 /// Ports are the interfaces that the application uses to interact with the outside world.
 use std::{future::Future, path::PathBuf};
 
-use super::{
-    models::{
-        CreateProjectError, CreateProjectRequest, DeleteProjectError, DeleteProjectRequest,
-        GetProjectError, GetProjectRequest, ListProjectsError, ListProjectsRequest,
-        UpdateProjectError, UpdateProjectRequest,
-    },
-    Project,
+use crate::project::models::project::{
+    CreateProjectError, CreateProjectRequest, DeleteProjectError, DeleteProjectRequest,
+    GetProjectError, GetProjectRequest, ListProjectsError, ListProjectsRequest, Project,
+    UpdateProjectError, UpdateProjectRequest,
 };
 
 /// ProjectRepository
@@ -46,21 +43,10 @@ pub trait ProjectRepository: Clone + Send + Sync + 'static {
     ) -> impl Future<Output = Result<Vec<Project>, ListProjectsError>> + Send;
 }
 
-pub trait FileSystemProjectRepository: Clone + Send + Sync + 'static {
+pub trait FileSystemProjectRepository {
     /// Creates a new project in the repository.
-    fn create_project(
-        &self,
-        req: &CreateProjectRequest,
-    ) -> impl Future<Output = Result<Project, CreateProjectError>> + Send;
+    fn new_prosefile(&self) -> Result<(), CreateProjectError>;
 
     /// Retrieves a project from the repository.
-    fn get_project(
-        &self,
-        req: &GetProjectRequest,
-    ) -> impl Future<Output = Result<Project, GetProjectError>> + Send;
-    /// Lists projects from the repository.
-    fn list_projects(
-        &self,
-        req: &ListProjectsRequest,
-    ) -> impl Future<Output = Result<Vec<Project>, ListProjectsError>> + Send;
+    fn load_prosefile(&self) -> Result<(), GetProjectError>;
 }

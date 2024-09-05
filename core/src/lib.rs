@@ -2,7 +2,7 @@ pub mod editor;
 pub mod project;
 pub mod types;
 use editor::services::document::DocumentService;
-use project::services::project::DesktopService as ProjectService;
+use project::services::project::ProjectService;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use thiserror::Error;

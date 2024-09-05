@@ -12,15 +12,6 @@ use crate::{
     types::{Id, Timestamp},
 };
 
-use std::cmp::Ordering;
-
-use derive_more::derive::{Deref, From};
-use thiserror::Error;
-
-use crate::types::{Id, Timestamp};
-
-use super::Title;
-
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, From, strum_macros::EnumString)]
 #[strum(serialize_all = "lowercase")]
 enum RootLevelCategory {

@@ -14,7 +14,7 @@
     "desktop": "pnpm --filter @md/desktop --",
     "interface": "pnpm --filter @md/interface --",
     "dev:desktop": "pnpm run --filter @md/desktop tauri dev",
-    "dev:ios": "pnpm run --filter @md/mobile tauri ios dev"
+    "dev:ios": "pnpm run --filter @md/desktop tauri ios dev"
   },
   "keywords": [],
   "author": "",

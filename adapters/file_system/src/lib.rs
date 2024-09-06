@@ -7,9 +7,13 @@ use proseforge_core::project::{
 };
 use thiserror::Error;
 
+/// File System adapter
+///
+/// Provides access to the file system for the Proseforge application.
 #[derive(Debug, Clone)]
 pub struct FileSystem {
     user_dir: PathBuf,
+    config_dir: PathBuf,
 }
 
 #[derive(Debug, Error)]
@@ -46,28 +50,33 @@ impl FileSystem {
 }
 
 impl FileSystemProjectRepository for FileSystem {
-    fn new_prosefile(&self) -> Result<(), CreateProjectError> {
+    async fn new_prosefile(&self) -> Result<(), CreateProjectError> {
         let user_dir = self.user_dir.clone();
         let path = FileDialog::new()
             .set_directory(user_dir)
+            .set_title("Create a new Prosefile")
+            .set_can_create_directories(true)
             .save_file()
             .map(|file_handle| file_handle.to_path_buf());
         if let Some(path) = path {
             path.with_extension("prose");
-            self.create_file(path);
+            self.create_file(path)
+                .map_err(|_| CreateProjectError::ProsefileError)?;
         }
         Ok(())
     }
 
-    fn load_prosefile(&self) -> Result<(), GetProjectError> {
+    async fn load_prosefile(&self) -> Result<PathBuf, GetProjectError> {
         let user_dir = self.user_dir.clone();
-        let user_dir = match user_dir {
-            Some(user_dir) => user_dir,
-            None => std::env::current_dir().unwrap(),
-        };
-        FileDialog::new()
+        let path = FileDialog::new()
             .set_directory(user_dir)
+            .set_title("Load a Prosefile")
             .pick_file()
-            .map(|file_handle| file_handle.to_path_buf()) // Convert to PathBuf if Some
+            .map(|file_handle| file_handle.to_path_buf());
+        if let Some(path) = path {
+            Ok(path)
+        } else {
+            Err(GetProjectError::NoPath)
+        }
     }
 }

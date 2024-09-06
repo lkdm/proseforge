@@ -1,3 +1,4 @@
+use bon::{bon, builder};
 use core::fmt;
 use derive_more::derive::{Deref, From};
 use std::{
@@ -108,6 +109,7 @@ pub enum ComponentKind {
 /// Components can have children, and can be nested.
 /// They have an optional summary and document.
 #[derive(Clone, Debug, Eq, Hash, From)]
+// #[builder]
 pub struct ProjectComponent {
     id: Id,
     kind: ComponentKind,

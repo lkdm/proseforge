@@ -16,3 +16,4 @@ strum_macros = "0.26.4"
 sqlx = { version = "0.8.1", features = ["sqlite", "runtime-tokio-native-tls"] }
 anyhow = "1.0.86"
 rusty_ulid = "2.0.0"
+bon = "2.1.1"

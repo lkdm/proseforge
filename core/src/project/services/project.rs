@@ -4,11 +4,10 @@ use std::{
     path::PathBuf,
 };
 use thiserror::Error;
-use tokio::sync::futures;
 
 use crate::{
     project::{
-        models::project::Project,
+        models::project::{CreateProjectError, CreateProjectRequest, GetProjectError, Project},
         ports::project::{FileSystemProjectRepository, ProjectRepository},
     },
     types::Id,
@@ -52,7 +51,7 @@ pub struct ProjectUpdateDto {
 /// This means that the ProjectService needs to be able to create, read, update, and delete both the file and the record.
 ///
 pub trait ProjectService {
-    type CreateInput;
+    type CreateInput: Send + 'static;
     type GetInput;
     type ListInput;
     type ListOutput;
@@ -98,47 +97,78 @@ pub trait ProjectService {
     ) -> impl Future<Output = Result<&Self::ListOutput, ServiceError>> + Send;
 }
 
-// TODO: Uncomment once you've implemented the file_system adapter for it.
-// impl<F, R> ProjectService for DesktopService<F, R>
-// where
-//     F: FileSystemProjectRepository,
-//     R: ProjectRepository,
-// {
-//     type CreateInput = PathBuf; // TODO: Include Project data AND path
-//     type GetInput = PathBuf;
-//     /// Pass in the default project directory
-//     type ListInput = PathBuf;
-//     /// Returns the path for the Project file.
-//     type ListOutput = PathBuf;
+#[derive(Debug, Clone, Serialize)]
+pub struct ProjectCreateDto {
+    pub title: String,
+    pub kind: String,
+}
 
-//     fn project_create(
-//         &self,
-//         req: &Self::CreateInput,
-//     ) -> impl Future<Output = Result<Id, ServiceError>> + Send {
-//         // Using fs repo, create .prose file at path.
-//         // Using db repo, create record with path.
-//         todo!()
-//     }
+impl From<ProjectCreateDto> for CreateProjectRequest {
+    fn from(dto: ProjectCreateDto) -> Self {
+        CreateProjectRequest::builder()
+            .title(dto.title.into())
+            .kind(dto.kind.into())
+            .build()
+    }
+}
 
-//     fn project_get(
-//         &self,
-//         req: &Self::GetInput,
-//     ) -> impl Future<Output = Result<Project, ServiceError>> + Send {
-//         todo!()
-//     }
+impl From<CreateProjectError> for ServiceError {
+    fn from(error: CreateProjectError) -> Self {
+        ServiceError(error.to_string())
+    }
+}
 
-//     fn project_update(
-//         &self,
-//         req: Id,
-//         update_data: ProjectUpdateDto,
-//     ) -> impl Future<Output = Result<(), ServiceError>> + Send {
-//         todo!()
-//     }
+impl<F, R> ProjectService for DesktopService<F, R>
+where
+    F: FileSystemProjectRepository,
+    R: ProjectRepository,
+{
+    type CreateInput = ProjectCreateDto;
+    type GetInput = PathBuf;
+    /// Pass in the default project directory
+    type ListInput = PathBuf;
+    /// Returns the path for the Project file.
+    type ListOutput = PathBuf;
 
-//     fn project_list(
-//         &self,
-//         req: &Self::ListInput,
-//     ) -> impl Future<Output = Result<&Self::ListOutput, ServiceError>> + Send {
-//         todo!()
-//     }
-// }
+    fn project_create(
+        &self,
+        req: &Self::CreateInput,
+    ) -> impl Future<Output = Result<Id, ServiceError>> + Send {
+        // Clone the repositories and the request
+        let fs_repo = self.fs_repo.clone();
+        let repo = self.repo.clone();
+        let create_request: CreateProjectRequest = req.clone().into();
+
+        // Return a future that is Send
+        async move {
+            // Using fs repo, create .prose file at path.
+            fs_repo.new_prosefile().await?;
+
+            // Using db repo, create record with path.
+            let project = repo.create_project(&create_request).await?;
+            Ok(project.id())
+        }
+    }
+
+    fn project_get(
+        &self,
+        req: &Self::GetInput,
+    ) -> impl Future<Output = Result<Project, ServiceError>> + Send {
+        async move { todo!() }
+    }
+
+    fn project_update(
+        &self,
+        req: Id,
+        update_data: ProjectUpdateDto,
+    ) -> impl Future<Output = Result<(), ServiceError>> + Send {
+        async move { todo!() }
+    }
+
+    fn project_list(
+        &self,
+        req: &Self::ListInput,
+    ) -> impl Future<Output = Result<&Self::ListOutput, ServiceError>> + Send {
+        async move { todo!() }
+    }
+}

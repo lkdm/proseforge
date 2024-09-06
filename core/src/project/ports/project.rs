@@ -43,10 +43,10 @@ pub trait ProjectRepository: Clone + Send + Sync + 'static {
     ) -> impl Future<Output = Result<Vec<Project>, ListProjectsError>> + Send;
 }
 
-pub trait FileSystemProjectRepository {
+pub trait FileSystemProjectRepository: Clone + Send + Sync + 'static {
     /// Creates a new project in the repository.
-    fn new_prosefile(&self) -> Result<(), CreateProjectError>;
+    fn new_prosefile(&self) -> impl Future<Output = Result<(), CreateProjectError>> + Send;
 
     /// Retrieves a project from the repository.
-    fn load_prosefile(&self) -> Result<(), GetProjectError>;
+    fn load_prosefile(&self) -> impl Future<Output = Result<PathBuf, GetProjectError>> + Send;
 }

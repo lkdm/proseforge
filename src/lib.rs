@@ -9,6 +9,7 @@ use ulid::Ulid;
 // Make a tree with indexmap as backing storage
 use std::hash::Hash;
 
+#[derive(Clone)]
 enum Node<K, B, L> {
     /// Branch is analagous to a directory
     Branch { key: K, value: B, children: Vec<K> },
@@ -68,15 +69,23 @@ impl<K, B, L> Node<K, B, L> {
 /// B: Branch
 /// L: Leaf
 pub(crate) struct Tree<K: Key, B, L>(SlotMap<K, Node<K, B, L>>);
-impl<K: Key, B, L> Tree<K, B, L> {
+impl<K: Key, B: Clone, L: Clone> Tree<K, B, L> {
     fn new() -> Self {
         Tree(SlotMap::with_key())
     }
+
+    /// Inserts a branch and returns a key
+    fn insert(&mut self, value: &Node<K, B, L>) -> &K {
+        &self.0.insert(value.clone())
+    }
+    // fn insert_branch_with_key(&mut self, branch: &B)
+    /// Moves a node with key K to a given parent and index
+    fn move(&mut self, key: K, parent_key: K, index: u32);
 }
 
-new_key_type! {
-    struct NoteKey;
-}
+// new_key_type! {
+//     struct NoteKey;
+// }
 
 #[cfg(test)]
 mod tests {
@@ -89,8 +98,8 @@ mod tests {
 
         // Create a basic hierarchy
         // parent_node
-        //   - child_node
-        //   - child_node2
+        //   - key for child_node
+        //   - key for child_node2
         let child_node: TestNode = Node::builder().key(0).leaf('a').build();
         let child_node2: TestNode = Node::builder().key(1).leaf('b').build();
         let parent_node: TestNode = Node::builder()

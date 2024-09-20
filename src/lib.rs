@@ -36,3 +36,12 @@ enum NoteNode {
 struct Draft {
     children: Vec<DraftNode>,
 }
+
+// Use Node to generic enum.
+enum Node<T> {
+    Branch {
+        value: T,
+        children: Vec<Box<Node<T>>>,
+    },
+    Leaf(T),
+}

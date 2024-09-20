@@ -8,36 +8,6 @@ use std::{
 use indexmap::{map::*, Equivalent};
 use std::hash::Hash;
 
-// new_key_type! {
-//     pub struct NoteId;
-//     pub struct DraftId;
-// }
-
-// enum Node<K: Key> {
-//     Branch { id: K, children: Vec<Node<K>> },
-//     Leaf { id: K },
-// }
-
-// struct DirTree<K: Key, V> {
-//     children: Vec<Node<K>>,
-//     data: SlotMap<K, V>,
-// }
-
-// impl<K: Key, V> Default for DirTree<K, V> {
-//     fn default() -> Self {
-//         DirTree {
-//             children: Vec::new(),
-//             data: SlotMap::with_key(),
-//         }
-//     }
-// }
-
-// impl<K: Key, V> DirTree<K, V> {
-//     pub fn new(children: Vec<Node<K>>, data: SlotMap<K, V>) -> Self {
-//         DirTree { children, data }
-//     }
-// }
-
 enum Node<K: Key> {
     Branch { id: K, children: Vec<Node<K>> },
     Leaf { id: K },
@@ -50,8 +20,18 @@ impl<K: Key> Node<K> {
     pub fn new_leaf(id: K) -> Self {
         Node::Leaf { id }
     }
+
+    /// Insert child
+    pub fn insert_child(&mut self, id: &K) {}
+    /// Insert child before a particular child.
+    pub fn insert_before(&mut self, id: &K, before: &K) {}
+    /// Swap an entry to the end, then pop it off– returning a reference to it.
+    pub fn swap_remove(&mut self, id: &K) -> (&K, &Self) {}
 }
 
+/// DataTree
+///
+/// Data referenced by ID, paired with a tree of IDs.
 struct Tree<K: Key, V> {
     children: Vec<Node<K>>,
     data: SlotMap<K, V>,
@@ -66,5 +46,17 @@ impl<K: Key, V> Tree<K, V> {
     }
     pub fn insert_child(&mut self, id: &K, parent: &K) {}
     pub fn insert_before(&mut self, id: &K, before: &K) {}
-    pub fn swap_remove(&mut self, id: &K) -> &K {}
+    pub fn remove(&mut self, id: &K) {}
+    pub fn move_to_parent(&mut self, id: &K, parent: &K) {}
+    pub fn move_before_sibling(&mut self, id: &K, parent: &K) {}
+    // TODO: recursive crawl.
+
+    /// Borrow a reference to the data
+    pub fn get_data(&self, id: &K) -> Option<&V> {
+        self.data.get(*id)
+    }
+    /// Borrow a mutable reference to the data
+    pub fn get_data_mut(&mut self, id: &K) -> Option<&mut V> {
+        self.data.get_mut(*id)
+    }
 }

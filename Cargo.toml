@@ -9,3 +9,4 @@ members = []
 
 [dependencies]
 bon = "2.3.0"
+indexmap = "2.5.0"

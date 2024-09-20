@@ -28,6 +28,7 @@ type DraftId = u32;
 
 use std::{
     cell::RefCell,
+    collections::VecDeque,
     sync::{Arc, Weak},
 };
 
@@ -43,93 +44,178 @@ struct Project {
     notes: Node<NoteId, NoteNode>,
 }
 
-enum Node<K: Equivalent<K> + Hash + Eq, V> {
-    Leaf {
-        inner: Arc<V>,
-        parent: Weak<RefCell<Node<K, V>>>,
-    },
-    Branch {
-        inner: Arc<V>,
-        children: IndexMap<K, Node<K, V>>,
-        parent: Option<Weak<RefCell<Node<K, V>>>>,
-    },
+enum Node<T> {
+    Root { children: Vec<Node<T>> },
+    Branch { id: T, children: Vec<Node<T>> },
+    Leaf { id: T },
 }
 
-#[bon]
-impl<K: Equivalent<K> + Hash + Eq, V> Node<K, V> {
-    /// Creates a new branch node.
-    #[builder]
-    fn new_branch(
-        inner: V,
-        children: Option<IndexMap<K, Node<K, V>>>,
-        parent: Option<Weak<RefCell<Node<K, V>>>>,
-    ) -> Self {
-        match children {
-            Some(c) => Node::Branch {
-                inner: Arc::new(inner),
-                children: c,
-                parent,
-            },
-            _ => Node::Branch {
-                inner: Arc::new(inner),
-                children: IndexMap::new(),
-                parent,
-            },
-        }
-    }
-    /// Creates a new leaf node.
-    #[builder]
-    pub fn new_leaf(inner: V, parent: Weak<RefCell<Node<K, V>>>) -> Self {
-        Node::Leaf {
-            inner: Arc::new(inner),
-            parent,
-        }
-    }
-    /// Adds a child last in the branch.
-    fn add_child(&mut self, key: K, node: Node<K, V>) {
-        match self {
-            Node::Leaf { .. } => {
-                panic!("Cannot add a child to a leaf node");
-            }
-            Node::Branch { children, .. } => {
-                children.insert(key, node);
-            }
-        }
-    }
-    /// Adds the node as a child, after a predecessor.
-    ///
-    /// [Documentation](https://docs.rs/indexmap/latest/indexmap/map/struct.IndexMap.html#method.insert_before)
-    fn insert_before(&mut self, key: K, node: Node<K, V>, index: usize) {
-        match self {
-            Node::Branch { children, .. } => children.insert_before(index, key, node),
-            _ => panic!("Cannot add a child to a leaf node."),
-        };
-    }
-    /// Swaps entry with last, and pops it off. Essentially removing the entry.
-    ///
-    /// Returns a Key, Value pair.
-    ///
-    /// [Documentation](https://docs.rs/indexmap/latest/indexmap/map/struct.IndexMap.html#method.swap_remove_entry)
-    fn swap_remove_entry(&mut self, key: &K) -> Option<(K, Node<K, V>)> {
-        match self {
-            Node::Branch { children, .. } => children.swap_remove_entry(key),
-            Node::Leaf { .. } => panic!("Cannot remove child from leaf node."),
-            _ => None,
-        }
-    }
-
-    /// Returns a reference to a node by key
-    fn get_node(&self, key: K) -> &Node<K, V> {
-        todo!()
-    }
-    /// Return number of children on this level.
-    fn children_count(&self) -> usize {
-        match self {
-            Node::Branch { children, .. } => children.len(),
-            _ => 0,
-        }
-    }
+struct DirTree {
+    tree: Nodes,
+    data_by_id: T,
 }
+
+// enum Node<K: Equivalent<K> + Hash + Eq + Copy, V> {
+//     Root {
+//         id: K,
+//         children: IndexMap<K, Node<K, V>>,
+//     },
+//     Leaf {
+//         id: K,
+//         inner: Arc<V>,
+//         parent: Weak<Node<K, V>>,
+//     },
+//     Branch {
+//         id: K,
+//         inner: Arc<V>,
+//         children: IndexMap<K, Node<K, V>>,
+//         parent: Weak<Node<K, V>>,
+//     },
+// }
+
+// struct NodePath<K>(VecDeque<K>);
+
+// impl<K> NodePath<K> {
+//     /// Creates a new empty NodePath.
+//     pub fn new() -> Self {
+//         NodePath(VecDeque::new())
+//     }
+//     /// Adds a key to the left end of the path.
+//     pub fn push_left(&mut self, key: K) {
+//         self.0.push_front(key);
+//     }
+//     /// Adds a key to the right end of the path.
+//     pub fn push_right(&mut self, key: K) {
+//         self.0.push_back(key);
+//     }
+
+//     /// Consumes and removes a key from the left end of the path.
+//     pub fn pop_left(&mut self) -> Option<K> {
+//         self.0.pop_front()
+//     }
+
+//     /// Returns a reference to the keys in the path.
+//     pub fn get_path(&self) -> &VecDeque<K> {
+//         &self.0
+//     }
+
+//     /// Returns the length of the path.
+//     pub fn len(&self) -> usize {
+//         self.0.len()
+//     }
+
+//     /// Checks if the path is empty.
+//     pub fn is_empty(&self) -> bool {
+//         self.0.is_empty()
+//     }
+// }
+
+// #[bon]
+// impl<K: Equivalent<K> + Hash + Eq + Copy, V> Node<K, V> {
+//     /// Returns the id
+//     pub fn id(&self) -> &K {
+//         match self {
+//             Node::Branch { id, .. } | Node::Leaf { id, .. } | Node::Root { id, .. } => id,
+//         }
+//     }
+
+//     /// Returns a path to the current Node.
+//     pub fn path(&self) -> NodePath<K> {
+//         let mut path = NodePath::new();
+//         let mut current = self;
+
+//         loop {
+//             match current {
+//                 Node::Leaf { parent, .. } | Node::Branch { parent, .. } => {
+//                     path.push_left(current.id().clone());
+//                     // Borrow the parent
+//                     if let Some(parent) = parent.upgrade() {
+//                         current = &*parent.copy();
+//                     } else {
+//                         break;
+//                     }
+//                 }
+//                 Node::Root { .. } => break,
+//             }
+//         }
+//         path
+//     }
+
+//     /// Creates a new branch node.
+//     #[builder]
+//     fn new_branch(
+//         inner: V,
+//         children: Option<IndexMap<K, Node<K, V>>>,
+//         parent: Option<Weak<RefCell<Node<K, V>>>>,
+//     ) -> Self {
+//         match children {
+//             Some(c) => Node::Branch {
+//                 inner: Arc::new(inner),
+//                 children: c,
+//                 parent,
+//             },
+//             _ => Node::Branch {
+//                 inner: Arc::new(inner),
+//                 children: IndexMap::new(),
+//                 parent,
+//             },
+//         }
+//     }
+//     /// Creates a new leaf node.
+//     #[builder]
+//     pub fn new_leaf(inner: V, parent: Weak<RefCell<Node<K, V>>>) -> Self {
+//         Node::Leaf {
+//             inner: Arc::new(inner),
+//             parent,
+//         }
+//     }
+//     /// Adds a child last in the branch.
+//     fn add_child(&mut self, key: K, node: Node<K, V>) {
+//         match self {
+//             Node::Leaf { .. } => {
+//                 panic!("Cannot add a child to a leaf node");
+//             }
+//             Node::Branch { children, .. } => {
+//                 children.insert(key, node);
+//             }
+//         }
+//     }
+//     /// Adds the node as a child, after a predecessor.
+//     ///
+//     /// [Documentation](https://docs.rs/indexmap/latest/indexmap/map/struct.IndexMap.html#method.insert_before)
+//     fn insert_before(&mut self, key: K, node: Node<K, V>, index: usize) {
+//         match self {
+//             Node::Branch { children, .. } => children.insert_before(index, key, node),
+//             _ => panic!("Cannot add a child to a leaf node."),
+//         };
+//     }
+//     /// Swaps entry with last, and pops it off. Essentially removing the entry.
+//     ///
+//     /// Returns a Key, Value pair.
+//     ///
+//     /// [Documentation](https://docs.rs/indexmap/latest/indexmap/map/struct.IndexMap.html#method.swap_remove_entry)
+//     fn swap_remove_entry(&mut self, key: &K) -> Option<(K, Node<K, V>)> {
+//         match self {
+//             Node::Branch { children, .. } => children.swap_remove_entry(key),
+//             Node::Leaf { .. } => panic!("Cannot remove child from leaf node."),
+//             _ => None,
+//         }
+//     }
+
+//     /// Returns a reference to a node by key
+//     fn get_node(&self, key: K) -> &Node<K, V> {
+//         todo!()
+//     }
+//     /// Return number of children on this level.
+//     fn children_count(&self) -> usize {
+//         match self {
+//             Node::Branch { children, .. } => children.len(),
+//             _ => 0,
+//         }
+//     }
+// }
+
+// pub fn
 
 // /// DirectoryTree
 // ///

@@ -141,6 +141,14 @@ impl<K: Key, V: Clone + Debug> Tree<K, V> {
         }
     }
 
+    //
+    // struct NodeId {
+    //   index: u16,
+    //   generation: u8,
+    // }
+    //
+    //
+
     // /// Explicitly convert a Leaf into a Branch and vice versa.
     // fn node_convert_to_branch(&mut self, key: &K) {
     //     if let Some(node) = self.nodes.get_mut(*key) {
@@ -192,6 +200,10 @@ impl<K: Key, V: Clone + Debug> Tree<K, V> {
             .children(Vec::new())
             .build();
         self.insert_node(node, parent_key, index)
+    }
+
+    pub fn move_node(&mut self, key: &K, parent_key: &K, index: usize) {
+        todo!()
     }
 
     /// Given a key, get a value from the tree.

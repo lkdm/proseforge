@@ -3,6 +3,7 @@ use slotmap::{new_key_type, Key, SecondaryMap, SlotMap};
 use std::{
     cell::RefCell,
     collections::BTreeMap,
+    fmt::Debug,
     sync::{Arc, Weak},
 };
 use ulid::Ulid;
@@ -80,7 +81,7 @@ pub(crate) struct Tree<K: Key, V> {
 }
 
 #[bon]
-impl<K: Key, V: Clone> Tree<K, V> {
+impl<K: Key, V: Clone + Debug> Tree<K, V> {
     /// Create a new tree
     #[builder]
     fn new(nodes: Option<SlotMap<K, Node<K, V>>>, root_nodes: Option<Vec<K>>) -> Self {
@@ -107,13 +108,13 @@ impl<K: Key, V: Clone> Tree<K, V> {
                         parent.push(key);
                         Some(key)
                     }
-                    None => None, // Noop. TODO: this is a different None to the one below. Should be handled differently.
+                    None => None, // Noop
                 }
             }
             None => {
                 let key = self.nodes.insert(value);
                 self.children.push(key);
-                None // Parent is root.
+                Some(key)
             }
         }
     }
@@ -129,40 +130,67 @@ impl<K: Key, V: Clone> Tree<K, V> {
                         parent.insert(index, key);
                         Some(key)
                     }
-                    None => None, // Noop. TODO: this is a different None to the one below. Should be handled differently.
+                    None => None, // Noop
                 }
             }
             None => {
                 let key = self.nodes.insert(value);
                 self.children.insert(index, key);
-                None // Parent is root.
+                Some(key)
             }
         }
     }
 
-    /// Explicitly convert a Leaf into a Branch and vice versa.
-    fn node_convert(&mut self, key: &K) {
-        if let Some(node) = self.nodes.get_mut(*key) {
-            *node = match node {
-                Node::Leaf { value } => Node::Branch {
-                    value: value.clone(),
-                    children: Vec::new(),
-                },
-                Node::Branch { value, children } => Node::Leaf {
-                    value: value.clone(),
-                },
-            };
-        }
-    }
-    /// Push a value to the tree
-    pub fn push(&mut self, value: &V, parent_key: Option<K>) -> Option<K> {
+    // /// Explicitly convert a Leaf into a Branch and vice versa.
+    // fn node_convert_to_branch(&mut self, key: &K) {
+    //     if let Some(node) = self.nodes.get_mut(*key) {
+    //         *node = match node {
+    //             Node::Leaf { value } => Node::Branch {
+    //                 value: value.clone(),
+    //                 children: Vec::new(),
+    //             },
+    //             _ => node,
+    //         };
+
+    //     }
+    // }
+    // /// Explicitly convert a Leaf into a Branch and vice versa.
+    // fn node_convert_to_leaf(&mut self, key: &K) {
+    //     if let Some(node) = self.nodes.get_mut(*key) {
+    //         *node = match node {
+    //             Node::Branch { value, children } => Node::Leaf {
+    //                 value: value.clone(),
+    //             },
+    //         };
+    //     }
+    // }
+
+    /// Push a value as a leaf to the tree
+    pub fn push_leaf(&mut self, value: &V, parent_key: Option<K>) -> Option<K> {
         let node: Node<K, V> = Node::builder().value(value.clone()).build();
         self.push_node(node, parent_key)
     }
+    /// Push a value as a branch to the tree
+    pub fn push_branch(&mut self, value: &V, parent_key: Option<K>) -> Option<K> {
+        let node: Node<K, V> = Node::builder()
+            .value(value.clone())
+            .children(Vec::new())
+            .build();
+        let key = self.push_node(node, parent_key);
+        key
+    }
 
     /// Insert a value at location
-    pub fn insert(&mut self, value: &V, parent_key: Option<K>, index: usize) -> Option<K> {
+    pub fn insert_leaf(&mut self, value: &V, parent_key: Option<K>, index: usize) -> Option<K> {
         let node: Node<K, V> = Node::builder().value(value.clone()).build();
+        self.insert_node(node, parent_key, index)
+    }
+    /// Insert a value at location
+    pub fn insert_branch(&mut self, value: &V, parent_key: Option<K>, index: usize) -> Option<K> {
+        let node: Node<K, V> = Node::builder()
+            .value(value.clone())
+            .children(Vec::new())
+            .build();
         self.insert_node(node, parent_key, index)
     }
 
@@ -221,13 +249,13 @@ mod tests {
         let mut tree: TestTree = Tree::builder().build();
         // Keep track of parent nodes.
         let mut index_table: BTreeMap<String, NodeId> = BTreeMap::new();
-        if let Some(id) = tree.push(&"🌎".to_string(), None) {
+        if let Some(id) = tree.push_branch(&"🌎".to_string(), None) {
             index_table.insert("Earth".to_string(), id);
         }
-        if let Some(id) = tree.push(&"🌕".to_string(), None) {
+        if let Some(id) = tree.push_branch(&"🌕".to_string(), None) {
             index_table.insert("Moon".to_string(), id);
         }
-        if let Some(id) = tree.push(&"🪐".to_string(), None) {
+        if let Some(id) = tree.push_branch(&"🪐".to_string(), None) {
             index_table.insert("Saturn".to_string(), id);
         }
         (tree, index_table)
@@ -237,10 +265,9 @@ mod tests {
     fn test_push() {
         let mut tree = setup_tree();
 
-        let parent = tree.push(&"🌎".to_string(), None);
-        dbg!(&tree);
+        let parent = tree.push_branch(&"🌎".to_string(), None);
         assert!(
-            parent.is_some(),
+            &parent.is_some(),
             "Inserting a node at root should return a key."
         );
 

@@ -9,6 +9,14 @@ use ulid::Ulid;
 // Make a tree with indexmap as backing storage
 use std::hash::Hash;
 
+// TODO: IF you add a key, you will need `insert_with_key`.
+// You will then need to use a function `sm.insert_with_key(|k| (k, 20));`
+//
+// So the Tree might become SlotMap<(K, Node<K, V>)>
+//
+// TODO: In addition, if we were to want reverse-lookup by stable id or title or tags,
+// we would use secondary maps.
+
 #[derive(Clone)]
 enum Node<K, V> {
     /// Branch is analagous to a directory
@@ -23,12 +31,14 @@ impl<K, V> Node<K, V> {
     ///
     /// Ideally you should use a bon builder for this
     #[builder]
-    fn new(value: V, children: Option<Vec<K>>) -> Self {
+    fn new(key: K, value: V, children: Option<Vec<K>>) -> Self {
         match children {
-            Some(children) => {
-                Self::Branch { value, children }
-            }
-            _ => Self::Leaf { value }
+            Some(children) => Self::Branch {
+                key,
+                value,
+                children,
+            },
+            _ => Self::Leaf { key, value },
         }
     }
     fn push(&mut self, key: K) -> () {
@@ -68,56 +78,72 @@ pub(crate) struct Tree<K: Key, V> {
     /// SlotMap of key -> Node, with each Node containing a Vec of keys as its children
     nodes: SlotMap<K, Node<K, V>>,
     /// Reference children at the root.
-    children: Vec<K>
+    children: Vec<K>,
 }
 
 #[bon]
 impl<K: Key, V: Clone> Tree<K, V> {
-
     /// Create a new tree
     #[builder]
     fn new(nodes: Option<SlotMap<K, Node<K, V>>>, root_nodes: Option<Vec<K>>) -> Self {
         match (nodes, root_nodes) {
             (Some(nodes), Some(root_nodes)) => Tree {
                 nodes,
-                children: Some(root_nodes)
+                children: root_nodes,
             },
             _ => Tree {
                 nodes: SlotMap::with_key(),
-                children: Vec::new()
-            }}
+                children: Vec::new(),
+            },
         }
     }
 
-    /// Given a node, insert it
-    fn insert(&mut self, value: Node<K, V>) -> K {
-        match Some(self.root_node) {
-            Some(root_node) => self.nodes.insert(value) // TODO: Insert at root_node
-            None => {
+    /// Insert a node as a child of a parent, in a particular place
+    fn push(&mut self, value: Node<K, V>, parent_key: Option<K>) -> K {
+        match parent_key {
+            Some(parent_key) => {
                 let key = self.nodes.insert(value);
-                self.root_node = key;
+                let parent = nodes.get_mut(parent_key);
+                parent.push(key);
+            }
+            None => {
+                let key = self.nodes.insert(value.key, value);
+                self.children.insert(key);
             }
         }
+    }
 
-    }
-    fn get(&self, key: K) -> Option<&Node<K, V>> {
-        self.nodes.get(key)
-    }
-    fn get_mut(&mut self, key: K) -> Option<&mut Node<K, V>> {
-        self.nodes.get_mut(key)
-    }
-    /// Moves a node with key K to a given parent and index
-    fn move(&mut self, key: K, parent_key: K, index: u32) {
-        let node_option = self.get(key);
-        let parent_option = self.get_mut(parent_key);
-        match node {
-            Some(node) =>
-        }
-    }
-    // get children
-
+    // Inserts a branch, containing a value
+    // pub fn insert_branch(&mut self, value: V);
+    // pub fn insert_leaf(&mut self, value: V);
 }
 
+/// Given a node, insert it
+// fn insert(&mut self, value: Node<K, V>) -> K {
+//     match Some(self.root_node) {
+//         Some(root_node) => self.nodes.insert(value) // TODO: Insert at root_node
+//         None => {
+//             let key = self.nodes.insert(value);
+//             self.root_node = key;
+//         }
+//     }
+
+// }
+// fn get(&self, key: K) -> Option<&Node<K, V>> {
+//     self.nodes.get(key)
+// }
+// fn get_mut(&mut self, key: K) -> Option<&mut Node<K, V>> {
+//     self.nodes.get_mut(key)
+// }
+// /// Moves a node with key K to a given parent and index
+// fn move(&mut self, key: K, parent_key: K, index: u32) {
+//     let node_option = self.get(key);
+//     let parent_option = self.get_mut(parent_key);
+//     match node {
+//         Some(node) =>
+//     }
+// }
+// get children
 // new_key_type! {
 //     struct NoteKey;
 // }

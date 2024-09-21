@@ -32,14 +32,10 @@ impl<K, V> Node<K, V> {
     ///
     /// Ideally you should use a bon builder for this
     #[builder]
-    fn new(key: K, value: V, children: Option<Vec<K>>) -> Self {
+    fn new(value: V, children: Option<Vec<K>>) -> Self {
         match children {
-            Some(children) => Self::Branch {
-                key,
-                value,
-                children,
-            },
-            _ => Self::Leaf { key, value },
+            Some(children) => Self::Branch { value, children },
+            _ => Self::Leaf { value },
         }
     }
     fn push(&mut self, key: K) -> () {
@@ -100,7 +96,7 @@ impl<K: Key, V: Clone> Tree<K, V> {
     }
 
     /// Push a node without caring about its index.
-    fn push(&mut self, value: Node<K, V>, parent_key: Option<K>) -> Option<K> {
+    fn push_node(&mut self, value: Node<K, V>, parent_key: Option<K>) -> Option<K> {
         match parent_key {
             Some(parent_key) => {
                 let key = self.nodes.insert(value);
@@ -122,7 +118,7 @@ impl<K: Key, V: Clone> Tree<K, V> {
     }
 
     /// Insert a node at index.
-    fn insert(&mut self, value: Node<K, V>, parent_key: Option<K>, index: usize) -> Option<K> {
+    fn insert_node(&mut self, value: Node<K, V>, parent_key: Option<K>, index: usize) -> Option<K> {
         match parent_key {
             Some(parent_key) => {
                 let key = self.nodes.insert(value);
@@ -140,6 +136,30 @@ impl<K: Key, V: Clone> Tree<K, V> {
                 self.children.insert(index, key);
                 None // Parent is root.
             }
+        }
+    }
+
+    /// Push a value to the tree
+    pub fn push(&mut self, value: &V, parent_key: Option<K>) -> Option<K> {
+        let node: Node<K, V> = Node::builder().value(value.clone()).build();
+        self.push_node(node, parent_key)
+    }
+
+    /// Insert a value at location
+    pub fn insert(&mut self, value: &V, parent_key: Option<K>, index: usize) -> Option<K> {
+        let node: Node<K, V> = Node::builder().value(value.clone()).build();
+        self.insert_node(node, parent_key, index)
+    }
+
+    /// Given a key, get a value from the tree.
+    pub fn get(&self, key: &K) -> Option<V> {
+        let maybe_node = self.nodes.get(*key);
+        match maybe_node {
+            Some(node) => match node.clone() {
+                Node::Branch { value, .. } => Some(value),
+                Node::Leaf { value } => Some(value),
+            },
+            _ => None,
         }
     }
 
@@ -166,21 +186,65 @@ mod tests {
     new_key_type! {
         struct NodeId;
     }
-    type TestContent = u32;
+    type TestContent = String;
 
     type TestTree = Tree<NodeId, TestContent>;
 
-    fn setup() -> TestTree {
-        Tree::builder().build()
+    // tree.push(&"🦘".to_string(), earth);
+    // tree.push(&"🦀".to_string(), earth);
+    // tree.push(&"🚀".to_string(), earth);
+    // tree.push(&"👨‍🚀".to_string(), earth);
+
+    /// Setup an empty tree for testing
+    fn setup_tree() -> TestTree {
+        let mut tree: TestTree = Tree::builder().build();
+        tree
+    }
+
+    /// Setup a tree with some example nodes for testing.
+    fn setup_tree_with_nodes() -> (TestTree, BTreeMap<String, NodeId>) {
+        let mut tree: TestTree = Tree::builder().build();
+        // Keep track of parent nodes.
+        let mut index_table: BTreeMap<String, NodeId> = BTreeMap::new();
+        if let Some(id) = tree.push(&"🌎".to_string(), None) {
+            index_table.insert("Earth".to_string(), id);
+        }
+        if let Some(id) = tree.push(&"🌕".to_string(), None) {
+            index_table.insert("Moon".to_string(), id);
+        }
+        if let Some(id) = tree.push(&"🪐".to_string(), None) {
+            index_table.insert("Saturn".to_string(), id);
+        }
+        (tree, index_table)
     }
 
     #[test]
-    fn test_tree() {
-        let tree = setup();
+    fn test_push() {
+        let mut tree = setup_tree();
 
-        let node1 =
+        let parent = tree.push(&"🌎".to_string(), None);
+        assert!(
+            parent.is_some(),
+            "Inserting a node at root should return a key."
+        );
 
-        tree.
+        if let Some(parent_id) = parent {
+            let item = tree.nodes.get(parent_id);
+            assert!(
+                item.is_some(),
+                "With a key, a node should be able to be retrived from the tree."
+            );
+
+            assert_eq!(
+                tree.get(&parent_id),
+                Some("🌎".to_string()),
+                "With a key, a node should be able to be retrived from the tree."
+            )
+        }
+
+        // Second, assert that tree contains item for index Parent.
+        // Third, try pushing to Parent node.
+        // Fourth, try sibling node at root.
     }
 
     // #[test]

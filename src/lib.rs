@@ -13,6 +13,7 @@ use std::hash::Hash;
 // You will then need to use a function `sm.insert_with_key(|k| (k, 20));`
 //
 // So the Tree might become SlotMap<(K, Node<K, V>)>
+// THIS MIGHT NOT BE NECESSARY. TRY TO IMPLEMENT IT WITHOUT IT.
 //
 // TODO: In addition, if we were to want reverse-lookup by stable id or title or tags,
 // we would use secondary maps.
@@ -48,7 +49,7 @@ impl<K, V> Node<K, V> {
         }
     }
     /// Inserts an element at position `index` within the vector, shifting all elements after it to the right.
-    fn insert(&mut self, key: K, index: usize) -> () {
+    fn insert(&mut self, index: usize, key: K) -> () {
         match self {
             Node::Branch { children, .. } => children.insert(index, key),
             _ => (),
@@ -98,43 +99,53 @@ impl<K: Key, V: Clone> Tree<K, V> {
         }
     }
 
-    /// Insert a node as a child of a parent, in a particular place
-    fn push(&mut self, value: Node<K, V>, parent_key: Option<K>) -> K {
+    /// Push a node without caring about its index.
+    fn push(&mut self, value: Node<K, V>, parent_key: Option<K>) -> Option<K> {
         match parent_key {
             Some(parent_key) => {
                 let key = self.nodes.insert(value);
-                let parent = nodes.get_mut(parent_key);
-                parent.push(key);
+                let parent = self.nodes.get_mut(parent_key);
+                match parent {
+                    Some(parent) => {
+                        parent.push(key);
+                        Some(key)
+                    }
+                    None => None, // Noop. TODO: this is a different None to the one below. Should be handled differently.
+                }
             }
             None => {
-                let key = self.nodes.insert(value.key, value);
-                self.children.insert(key);
+                let key = self.nodes.insert(value);
+                self.children.push(key);
+                None // Parent is root.
+            }
+        }
+    }
+
+    /// Insert a node at index.
+    fn insert(&mut self, value: Node<K, V>, parent_key: Option<K>, index: usize) -> Option<K> {
+        match parent_key {
+            Some(parent_key) => {
+                let key = self.nodes.insert(value);
+                let parent = self.nodes.get_mut(parent_key);
+                match parent {
+                    Some(parent) => {
+                        parent.insert(index, key);
+                        Some(key)
+                    }
+                    None => None, // Noop. TODO: this is a different None to the one below. Should be handled differently.
+                }
+            }
+            None => {
+                let key = self.nodes.insert(value);
+                self.children.insert(index, key);
+                None // Parent is root.
             }
         }
     }
 
     // Inserts a branch, containing a value
-    // pub fn insert_branch(&mut self, value: V);
-    // pub fn insert_leaf(&mut self, value: V);
 }
 
-/// Given a node, insert it
-// fn insert(&mut self, value: Node<K, V>) -> K {
-//     match Some(self.root_node) {
-//         Some(root_node) => self.nodes.insert(value) // TODO: Insert at root_node
-//         None => {
-//             let key = self.nodes.insert(value);
-//             self.root_node = key;
-//         }
-//     }
-
-// }
-// fn get(&self, key: K) -> Option<&Node<K, V>> {
-//     self.nodes.get(key)
-// }
-// fn get_mut(&mut self, key: K) -> Option<&mut Node<K, V>> {
-//     self.nodes.get_mut(key)
-// }
 // /// Moves a node with key K to a given parent and index
 // fn move(&mut self, key: K, parent_key: K, index: u32) {
 //     let node_option = self.get(key);
@@ -151,6 +162,26 @@ impl<K: Key, V: Clone> Tree<K, V> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    new_key_type! {
+        struct NodeId;
+    }
+    type TestContent = u32;
+
+    type TestTree = Tree<NodeId, TestContent>;
+
+    fn setup() -> TestTree {
+        Tree::builder().build()
+    }
+
+    #[test]
+    fn test_tree() {
+        let tree = setup();
+
+        let node1 =
+
+        tree.
+    }
 
     // #[test]
     // /// Tests methods related to Nodes.

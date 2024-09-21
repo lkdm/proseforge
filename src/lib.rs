@@ -6,6 +6,7 @@ use std::{
     fmt::Debug,
     sync::{Arc, Weak},
 };
+pub mod tree;
 use ulid::Ulid;
 // Make a tree with indexmap as backing storage
 use std::hash::Hash;
@@ -18,6 +19,10 @@ use std::hash::Hash;
 //
 // TODO: In addition, if we were to want reverse-lookup by stable id or title or tags,
 // we would use secondary maps.
+
+// Is this correct
+// - Compiling needs depth.
+// - How to delete entry from Vec (just make it optional?)
 
 #[derive(Clone, Debug)]
 enum Node<K, V> {
@@ -141,12 +146,7 @@ impl<K: Key, V: Clone + Debug> Tree<K, V> {
         }
     }
 
-    //
-    // struct NodeId {
-    //   index: u16,
-    //   generation: u8,
-    // }
-    //
+    // Maybe stash instead of slot map?
     //
 
     // /// Explicitly convert a Leaf into a Branch and vice versa.

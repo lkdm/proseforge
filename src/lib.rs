@@ -18,7 +18,7 @@ use std::hash::Hash;
 // TODO: In addition, if we were to want reverse-lookup by stable id or title or tags,
 // we would use secondary maps.
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum Node<K, V> {
     /// Branch is analagous to a directory
     Branch { value: V, children: Vec<K> },
@@ -71,6 +71,7 @@ impl<K, V> Node<K, V> {
 ///
 /// K: Key
 /// V: Node
+#[derive(Debug)]
 pub(crate) struct Tree<K: Key, V> {
     /// SlotMap of key -> Node, with each Node containing a Vec of keys as its children
     nodes: SlotMap<K, Node<K, V>>,
@@ -139,6 +140,20 @@ impl<K: Key, V: Clone> Tree<K, V> {
         }
     }
 
+    /// Explicitly convert a Leaf into a Branch and vice versa.
+    fn node_convert(&mut self, key: &K) {
+        if let Some(node) = self.nodes.get_mut(*key) {
+            *node = match node {
+                Node::Leaf { value } => Node::Branch {
+                    value: value.clone(),
+                    children: Vec::new(),
+                },
+                Node::Branch { value, children } => Node::Leaf {
+                    value: value.clone(),
+                },
+            };
+        }
+    }
     /// Push a value to the tree
     pub fn push(&mut self, value: &V, parent_key: Option<K>) -> Option<K> {
         let node: Node<K, V> = Node::builder().value(value.clone()).build();
@@ -223,6 +238,7 @@ mod tests {
         let mut tree = setup_tree();
 
         let parent = tree.push(&"🌎".to_string(), None);
+        dbg!(&tree);
         assert!(
             parent.is_some(),
             "Inserting a node at root should return a key."

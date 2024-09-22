@@ -1,3 +1,12 @@
+[package]
+name = "proseforge_core"
+version = "0.1.0"
+edition = "2021"
+
 [workspace]
 resolver = "2"
-members = ["apps/desktop/src-tauri", "core"]
+members = []
+
+[dependencies]
+bon = "2.3.0"
+indexmap = "2.5.0"

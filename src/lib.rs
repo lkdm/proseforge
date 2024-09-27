@@ -1,15 +1,8 @@
-use bon::{bon, builder};
-use slotmap::{new_key_type, Key, SecondaryMap, SlotMap};
-use std::{
-    cell::RefCell,
-    collections::BTreeMap,
-    fmt::Debug,
-    sync::{Arc, Weak},
-};
+use bon::bon;
+use slotmap::{Key,SlotMap};
+use std::fmt::Debug;
 pub mod tree;
-use ulid::Ulid;
 // Make a tree with indexmap as backing storage
-use std::hash::Hash;
 
 // TODO: IF you add a key, you will need `insert_with_key`.
 // You will then need to use a function `sm.insert_with_key(|k| (k, 20));`
@@ -44,7 +37,7 @@ impl<K, V> Node<K, V> {
             _ => Self::Leaf { value },
         }
     }
-    fn push(&mut self, key: K) -> () {
+    fn push(&mut self, key: K) {
         match self {
             Node::Branch { children, .. } => children.push(key),
             _ => (),
@@ -70,6 +63,7 @@ impl<K, V> Node<K, V> {
         }
     }
 }
+
 
 /// An user-ordered tree structure
 ///

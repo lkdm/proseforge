@@ -1,6 +1,6 @@
-use std::{borrow::BorrowMut, collections::BTreeMap};
+use std::collections::BTreeMap;
 
-use bon::{bon, builder, Builder};
+use bon::Builder;
 
 type PrivateKey = usize;
 
@@ -94,7 +94,7 @@ impl<K: Ord + Clone + Copy, B: Clone + Copy, L: Clone + Copy> OrderedTree<K, B, 
         if self.by_id.contains_key(&id) {
             return Err(TreeError::KeyAlreadyExists);
         }
-
+  
         // Get the parent key
         let parent_key = *self.get_key(parent_id).ok_or(TreeError::ParentNotFound)?;
 
@@ -159,8 +159,10 @@ impl<K: Ord + Clone + Copy, B: Clone + Copy, L: Clone + Copy> OrderedTree<K, B, 
 mod tests {
     use super::*;
     type Id = String;
-
+    
+    #[derive(Clone, Copy)]
     struct Directory;
+    #[derive(Clone, Copy)]
     struct File;
 
     type TestTree = OrderedTree<Id, Directory, File>;

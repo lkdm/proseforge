@@ -17,6 +17,7 @@ fn greet(name: &str) -> String {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .setup(move |app| {
             let handle = app.handle();
@@ -27,7 +28,7 @@ pub fn run() {
             handle.on_menu_event(move |handle, event| {
                 if event.id() == "NEW" {
                     // TODO: if unsaved changes– ask user– are you sure?
-                    new_prosefile(handle, |file_path| {
+                    new_prosefile(&handle, |file_path| {
                         dbg!(file_path);
                     })
                 }

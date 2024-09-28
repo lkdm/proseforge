@@ -75,19 +75,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "86fdf8605db99b54d3cd748a44c6d04df638eb5dafb219b135d0149bd0db01f6"
 
 [[package]]
-name = "app"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-dialog",
- "tauri-plugin-shell",
- "tauri-plugin-store",
-]
-
-[[package]]
 name = "ashpd"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2659,7 +2646,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "proseforge_core"
+name = "prose_core"
 version = "0.1.0"
 dependencies = [
  "bon",
@@ -2667,6 +2654,31 @@ dependencies = [
  "serde_json",
  "slotmap",
  "ulid",
+]
+
+[[package]]
+name = "prose_desktop"
+version = "0.1.0"
+dependencies = [
+ "prose_sqlite",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-dialog",
+ "tauri-plugin-fs",
+ "tauri-plugin-shell",
+ "tauri-plugin-store",
+ "thiserror",
+]
+
+[[package]]
+name = "prose_sqlite"
+version = "0.1.0"
+dependencies = [
+ "bon",
+ "rusqlite",
+ "thiserror",
 ]
 
 [[package]]
@@ -3299,15 +3311,6 @@ dependencies = [
  "gobject-sys",
  "libc",
  "system-deps",
-]
-
-[[package]]
-name = "sqlite-adapter"
-version = "0.1.0"
-dependencies = [
- "bon",
- "rusqlite",
- "thiserror",
 ]
 
 [[package]]

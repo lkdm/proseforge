@@ -1,11 +1,11 @@
 [package]
-name = "proseforge_core"
+name = "prose_core"
 version = "0.1.0"
 edition = "2021"
 
 [workspace]
 resolver = "2"
-members = ["crates/sqlite-adapter", "app/src-tauri"]
+members = ["crates/prose_sqlite", "app/src-tauri"]
 
 [dependencies]
 bon = "2.3.0"

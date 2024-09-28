@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use file::{new_prosefile, open_prosefile};
+use prose_sqlite::SqliteAdapter;
 use serde_json::json;
 use tauri::{Manager, Wry};
 use tauri_plugin_dialog::DialogExt;
@@ -25,10 +26,13 @@ pub fn run() {
 
             // app.set_menu(menu)?;
 
+            let sqlite_adapter = SqliteAdapter::new();
+
             handle.on_menu_event(move |handle, event| {
                 if event.id() == "NEW" {
                     // TODO: if unsaved changes– ask user– are you sure?
                     new_prosefile(&handle, |file_path| {
+                        todo!("connect to db");
                         dbg!(file_path);
                     })
                 }

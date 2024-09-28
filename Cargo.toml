@@ -5,6 +5,7 @@ edition = "2021"
 
 [workspace]
 resolver = "2"
+members = ["crates/sqlite-adapter", "app/src-tauri"]
 
 [dependencies]
 bon = "2.3.0"

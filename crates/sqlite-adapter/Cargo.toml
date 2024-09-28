@@ -1,0 +1,9 @@
+[package]
+name = "sqlite-adapter"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bon = "2.3.0"
+rusqlite = { version = "0.32.1", features = ["bundled", "chrono", "uuid"] }
+thiserror = "1.0.64"

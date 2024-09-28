@@ -1,0 +1,15 @@
+
+CREATE TABLE DataStore(
+    key TEXT PRIMARY KEY,
+    data BLOB
+);
+
+CREATE TABLE Document(
+    id INTEGER PRIMARY KEY AUTOINCREMENT
+    node_id INTEGER UNIQUE NOT NULL
+    content TEXT NOT NULL
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+)
+
+CREATE INDEX idx_document_node_id ON Document(node_id);

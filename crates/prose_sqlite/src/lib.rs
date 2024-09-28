@@ -23,24 +23,24 @@ pub enum AdapterError {
 /// An adapter for the application that implements SQLite.
 pub struct SqliteAdapter(Connection);
 
-/// Create an adapter in memory for testing
-fn in_memory_adapter() -> SqliteAdapter {
-    match Connection::open_in_memory() {
-        Ok(cnx) => SqliteAdapter(cnx),
-        _ => panic!("Could not open Sqlite connection in memory."),
-    }
-}
-
 #[bon]
 impl SqliteAdapter {
     /// Creates a new SqliteAdapter
     #[builder]
-    pub fn new(path: PathBuf) -> Result<Self, AdapterError> {
+    fn path(path: PathBuf) -> Result<Self, AdapterError> {
         let cnx = Connection::open(path)?;
         Ok(SqliteAdapter(cnx))
     }
+    /// Creates an in-memory SqliteAdapter for the purpose of testing
+    #[builder(finish_fn = init)]
+    fn in_memory() -> Self {
+        match Connection::open_in_memory() {
+            Ok(cnx) => SqliteAdapter(cnx),
+            _ => panic!("Could not open Sqlite connection in memory."),
+        }
+    }
+
     /// Initialises the database
-    #[builder]
     pub fn init(&mut self) -> Result<(), rusqlite::Error> {
         let mut user_pragma = self.0.prepare("PRAGMA user_version")?;
         let existing_user_version: u32 = user_pragma.query_row([], |row| Ok(row.get(0)?))?;
@@ -72,7 +72,7 @@ mod tests {
     use super::*;
 
     fn setup() -> SqliteAdapter {
-        in_memory_adapter()
+        SqliteAdapter::in_memory().init()
     }
 
     #[test]

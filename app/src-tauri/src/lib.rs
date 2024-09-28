@@ -1,5 +1,12 @@
-use tauri::menu::{AboutMetadataBuilder, MenuBuilder, MenuItemBuilder, SubmenuBuilder};
+use std::path::PathBuf;
+
+use serde_json::json;
+use tauri::{
+    menu::{AboutMetadataBuilder, MenuBuilder, MenuItemBuilder, SubmenuBuilder},
+    Manager, Wry,
+};
 use tauri_plugin_dialog::DialogExt;
+use tauri_plugin_store::{with_store, StoreCollection};
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
@@ -10,8 +17,10 @@ fn greet(name: &str) -> String {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_store::Builder::new().build())
         .setup(move |app| {
             let handle = app.handle();
+
             let app_submenu = SubmenuBuilder::new(handle, "Application")
                 .about(Some(
                     AboutMetadataBuilder::new()
@@ -89,8 +98,32 @@ pub fn run() {
                         })
                 }
                 if event.id() == "SAVE" {
+                    // Saves the current focused document
                     unimplemented!("Save transactions");
                 }
+            });
+
+            let stores = handle
+                .try_state::<StoreCollection<Wry>>()
+                .ok_or("Store not found")?;
+            let path = PathBuf::from("store.bin");
+
+            with_store(app.handle().clone(), stores, path, |store| {
+                // Note that values must be serde_json::Value instances,
+                // otherwise, they will not be compatible with the JavaScript bindings.
+                store.insert("some-key".to_string(), json!({ "value": 5 }))?;
+
+                // Get a value from the store.
+                let value = store
+                    .get("some-key")
+                    .expect("Failed to get value from store");
+                println!("{}", value); // {"value":5}
+
+                // You can manually save the store after making changes.
+                // Otherwise, it will save upon graceful exit as described above.
+                store.save()?;
+
+                Ok(())
             });
 
             Ok(())

@@ -2,7 +2,7 @@ use binder::Binder;
 use bon::bon;
 use serde::{Deserialize, Serialize};
 use slotmap::{Key, SlotMap};
-use std::{collections::BTreeMap, fmt::Debug};
+use std::{collections::BTreeMap, fmt::Debug, path::PathBuf};
 use tree::Node;
 pub mod binder;
 pub mod draft;

@@ -1,12 +1,12 @@
 use std::path::PathBuf;
 
+use file::{new_prosefile, open_prosefile};
 use serde_json::json;
-use tauri::{
-    menu::{AboutMetadataBuilder, MenuBuilder, MenuItemBuilder, SubmenuBuilder},
-    Manager, Wry,
-};
+use tauri::{Manager, Wry};
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_store::{with_store, StoreCollection};
+pub mod file;
+pub mod menu;
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
@@ -20,82 +20,21 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .setup(move |app| {
             let handle = app.handle();
+            // let menu = setup_menu(handle);
 
-            let app_submenu = SubmenuBuilder::new(handle, "Application")
-                .about(Some(
-                    AboutMetadataBuilder::new()
-                        .name("Proseforge".into())
-                        .version("0.1.0".into())
-                        .authors(vec!["Luke Martin".into()].into())
-                        .website("https://lukm.dev/".into())
-                        .comments("A simple markdown editor".into())
-                        .build(),
-                ))
-                .separator()
-                .close_window()
-                .quit()
-                .build()?;
-            let file_submenu = SubmenuBuilder::new(handle, "File")
-                .item(
-                    &MenuItemBuilder::with_id("NEW", "New")
-                        .accelerator("CmdOrControl+N")
-                        .build(handle)?,
-                )
-                .item(
-                    &MenuItemBuilder::with_id("OPEN", "Open")
-                        .accelerator("CmdOrControl+O")
-                        .build(handle)?,
-                )
-                .item(
-                    &MenuItemBuilder::with_id("SAVE", "Save")
-                        .accelerator("CmdOrControl+S")
-                        .build(handle)?,
-                )
-                .build()?;
-            let edit_submenu = SubmenuBuilder::new(handle, "Edit")
-                .cut()
-                .copy()
-                .paste()
-                .separator()
-                .undo()
-                .redo()
-                .separator()
-                .select_all()
-                .build()?;
-            let menu = MenuBuilder::new(handle)
-                .item(&app_submenu)
-                .item(&file_submenu)
-                .item(&edit_submenu)
-                .build()?;
-            app.set_menu(menu)?;
+            // app.set_menu(menu)?;
 
             handle.on_menu_event(move |handle, event| {
                 if event.id() == "NEW" {
                     // TODO: if unsaved changes– ask user– are you sure?
-                    handle
-                        .dialog()
-                        .file()
-                        .set_title("New Prosefile")
-                        .set_can_create_directories(true)
-                        .add_filter("Prosefiles", &["prose"])
-                        .save_file(|file_path| {
-                            // Clear application memory
-                            // Create db file
-                        })
+                    new_prosefile(handle, |file_path| {
+                        dbg!(file_path);
+                    })
                 }
                 if event.id() == "OPEN" {
-                    handle
-                        .dialog()
-                        .file()
-                        .set_title("Open Prosefile")
-                        .add_filter("Prosefiles", &["prose"])
-                        .pick_file(|file_path| {
-                            // return a file_path `Option`, or `None` if the user closes the dialog
-                            match file_path {
-                                Some(path) => print!("{:?}", path),
-                                _ => (),
-                            }
-                        })
+                    open_prosefile(handle, |file_path| {
+                        dbg!(file_path);
+                    })
                 }
                 if event.id() == "SAVE" {
                     // Saves the current focused document
@@ -108,6 +47,9 @@ pub fn run() {
                 .ok_or("Store not found")?;
             let path = PathBuf::from("store.bin");
 
+            // Dependency injection to manage this.
+            // 1. Define the interface for Config in the Config crate, and make it available in the core.
+            #[warn(unused_must_use)]
             with_store(app.handle().clone(), stores, path, |store| {
                 // Note that values must be serde_json::Value instances,
                 // otherwise, they will not be compatible with the JavaScript bindings.
@@ -128,6 +70,7 @@ pub fn run() {
 
             Ok(())
         })
+        .menu(menu::setup_menu)
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![greet])

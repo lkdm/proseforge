@@ -10,9 +10,11 @@ pub enum DraftKind {
     NovelWithParts,
 }
 
+type DraftId = u32;
+
 pub struct Draft {
+    id: DraftId,
     kind: DraftKind,
     tree: Tree,
     title: String,
-    word_goal: u32,
 }

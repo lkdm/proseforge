@@ -1,6 +1,8 @@
 use crate::{draft::Draft, tree::Tree};
+use serde::{Deserialize, Serialize};
 
 /// The binder keeps track of the project's documents, and structure.
+#[derive(Serialize, Deserialize)]
 pub struct Binder {
     binder_items: Vec<BinderItem>,
 }
@@ -8,6 +10,7 @@ pub struct Binder {
 /// BinderItem
 ///
 /// A binder is a root-level directory that dictates rules for its conents.
+#[derive(Serialize, Deserialize)]
 pub enum BinderItem {
     Draft(Draft),
     Notes(Tree),

@@ -17,7 +17,7 @@ init-ios:
 
 dev target='desktop':
     @echo "Running dev instance for {{target}}..."
-    pushd application
+    pushd app
     if [ "{{target}}" = "ios" ]; then \
         cargo tauri dev ios --open; \
     elif [ "{{target}}" = "desktop" ]; then \

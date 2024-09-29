@@ -29,24 +29,29 @@ impl SqliteAdapter {
     #[builder]
     fn path(path: PathBuf) -> Result<Self, AdapterError> {
         let cnx = Connection::open(path)?;
-        Ok(SqliteAdapter(cnx))
+        Ok(SqliteAdapter(cnx));
+        todo!("Run migrations")
     }
     /// Creates an in-memory SqliteAdapter for the purpose of testing
     #[builder(finish_fn = init)]
     fn in_memory() -> Self {
         match Connection::open_in_memory() {
-            Ok(cnx) => SqliteAdapter(cnx),
+            Ok(cnx) => {
+                let mut adapter = SqliteAdapter(cnx);
+                adapter.init().expect("Migrations should run as expected");
+                adapter
+            }
             _ => panic!("Could not open Sqlite connection in memory."),
         }
     }
 
     /// Initialises the database
-    pub fn init(&mut self) -> Result<(), rusqlite::Error> {
+    pub fn init(&mut self) -> Result<&Self, rusqlite::Error> {
         let mut user_pragma = self.0.prepare("PRAGMA user_version")?;
         let existing_user_version: u32 = user_pragma.query_row([], |row| Ok(row.get(0)?))?;
         drop(user_pragma);
         self.run_migrations_if_needed(existing_user_version)?;
-        Ok(())
+        Ok(self)
     }
 
     /// Runs migrations if necessary
